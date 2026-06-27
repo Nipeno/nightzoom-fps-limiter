@@ -45,7 +45,7 @@ Questions, need help, or found a bug? Come say hi:
 ## Credits
 
 - Developer: **Nipeno**
-- Testers: **Beanz**, **Cenkov**, **PhatWraith**, **krispy lzz**
+- Testers: **Beanz**, **Cenkov**, **PhatWraith**, **krispy lzz**, **Wraith**
 
 ## For developers
 

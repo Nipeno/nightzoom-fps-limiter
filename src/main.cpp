@@ -270,10 +270,9 @@ static void draw_overlay(reshade::api::effect_runtime *runtime)
 	ImGui::Separator();
 	ImGui::TextUnformatted("Made by Nipeno");
 
-	// Discord link: button opens the invite; full URL shown as a selectable fallback.
+	// Discord link: button opens the invite; full URL shown below as a selectable fallback.
 	if (ImGui::Button("Join the Discord"))
 		ShellExecuteA(nullptr, "open", kDiscordUrl, nullptr, nullptr, SW_SHOWNORMAL);
-	ImGui::SameLine();
 	ImGui::TextUnformatted(kDiscordUrl); // Selectable/copyable if the click is blocked.
 }
 

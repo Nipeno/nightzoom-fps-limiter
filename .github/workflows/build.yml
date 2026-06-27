@@ -58,43 +58,25 @@ jobs:
       - name: Assemble bundle
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item build/Release/NightZoom.addon64 dist/
+          Copy-Item build/Release/NZ-FPS-Limiter.addon64 dist/
           Copy-Item dxgi.dll                         dist/
           Copy-Item packaging/Enable-ReShade.bat     dist/
           Copy-Item packaging/INSTALL.txt            dist/
           Copy-Item third_party/ReShade-LICENSE.txt  dist/
           Copy-Item LICENSE                          dist/LICENSE.txt
-          $zip = "NightZoom-ReShade-Bundle_v$env:reshade_version.zip"
+          $zip = "NZ-FPS-Limiter_v$env:reshade_version.zip"
           Compress-Archive -Path dist/* -DestinationPath $zip -Force
           "bundle_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      # --- Assemble the add-on-only download (for people who have ReShade) ---
-      - name: Assemble addon-only zip
-        run: |
-          New-Item -ItemType Directory -Force -Path dist-addon | Out-Null
-          Copy-Item build/Release/NightZoom.addon64       dist-addon/
-          Copy-Item packaging/Enable-ReShade.bat          dist-addon/
-          Copy-Item packaging/INSTALL-addon-only.txt      dist-addon/INSTALL.txt
-          Copy-Item LICENSE                               dist-addon/LICENSE.txt
-          $zip = "NightZoom-Addon-Only.zip"
-          Compress-Archive -Path dist-addon/* -DestinationPath $zip -Force
-          "addon_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-
-      # --- Artifacts (available on every build) -----------------------------
+      # --- Artifact (available on every build) ------------------------------
       - name: Upload bundle (zip)
         uses: actions/upload-artifact@v4
         with:
-          name: NightZoom-ReShade-Bundle
+          name: NZ-FPS-Limiter
           path: ${{ env.bundle_zip }}
 
-      - name: Upload addon-only (zip)
-        uses: actions/upload-artifact@v4
-        with:
-          name: NightZoom-Addon-Only
-          path: ${{ env.addon_zip }}
-
       # --- Release (only when a v* tag is pushed) ---------------------------
-      - name: Attach assets to Release
+      - name: Attach asset to Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
@@ -102,17 +84,15 @@ jobs:
           body: |
             Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
 
-            ## Which file do I download?
+            **Download `NZ-FPS-Limiter_v…zip`** and extract it into your FiveM `plugins`
+            folder. It includes ReShade, so it's all you need.
 
-            - **No ReShade yet? (easiest)** — get **`NightZoom-ReShade-Bundle_v…zip`**. It includes
-              ReShade. Extract everything into your FiveM `plugins` folder.
-            - **Already have ReShade** (NVE / QuantV / other graphics pack) — get
-              **`NightZoom-Addon-Only.zip`** and extract `NightZoom.addon64` into `plugins`.
+            - **Already have ReShade** (NVE / QuantV / other graphics pack)? Extract only
+              `NZ-FPS-Limiter.addon64` and skip the bundled `dxgi.dll` (two copies conflict).
+            - **No ReShade yet?** Extract everything, then run `Enable-ReShade.bat`.
 
-            Each zip has an `INSTALL.txt` with full steps (including the one-time FiveM
+            The included `INSTALL.txt` has the full steps (including the one-time FiveM
             "ReShade was blocked" fix). The bundled ReShade is the latest official build (BSD).
 
             💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).
-          files: |
-            ${{ env.bundle_zip }}
-            ${{ env.addon_zip }}
+          files: ${{ env.bundle_zip }}

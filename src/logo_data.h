@@ -1,5 +1,5 @@
-// Auto-generated from nightzoom-logo.png (512x512, pngquant-optimized). Do not edit by hand.
-// Regenerate: pngquant ... then  xxd -i nightzoom-logo.png > src/logo_data.h  (and tidy names).
+// Auto-generated from nz-fps-limiter-logo.png (512x512, pngquant-optimized). Do not edit by hand.
+// Regenerate: pngquant ... then  xxd -i nz-fps-limiter-logo.png > src/logo_data.h  (and tidy names).
 #pragma once
 
 const unsigned char g_logo_png[] = {

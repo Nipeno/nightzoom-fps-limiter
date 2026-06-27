@@ -1,6 +1,6 @@
 @echo off
 setlocal
-title NightZoom - Enable ReShade in FiveM
+title NightZoom FPS Limiter - Enable ReShade in FiveM
 rem  Auto-allows ReShade in FiveM by writing the [Addons] ReShade5 line to
 rem  CitizenFX.ini. The required ID is Joaat(lowercase(COMPUTERNAME)) - exactly
 rem  what FiveM expects (see ReShadeFixups.cpp). No FiveM launch needed.
@@ -12,7 +12,7 @@ exit /b
 #:PS:#
 $ErrorActionPreference = 'Stop'
 Write-Host ''
-Write-Host '  NightZoom - Enable ReShade in FiveM' -ForegroundColor Cyan
+Write-Host '  NightZoom FPS Limiter - Enable ReShade in FiveM' -ForegroundColor Cyan
 Write-Host '  -----------------------------------'
 
 # 1. Compute the ReShade5 acknowledgement ID for this PC.

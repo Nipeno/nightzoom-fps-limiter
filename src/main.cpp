@@ -8,7 +8,7 @@
 // version. This program is distributed WITHOUT ANY WARRANTY. See the GNU General
 // Public License (LICENSE file) for details: https://www.gnu.org/licenses/
 //
-// Build target: single DLL renamed to NightZoom.addon64 (Windows x64).
+// Build target: single DLL renamed to NZ-FPS-Limiter.addon64 (Windows x64).
 // Requires the ADDON-ENABLED build of ReShade.
 //
 // How it works:
@@ -20,12 +20,12 @@
 
 #include <imgui.h>          // Must be included BEFORE reshade.hpp so the overlay wrappers compile.
 #include <reshade.hpp>
-#include "logo_data.h"      // Embedded NightZoom_logo.png bytes (g_logo_png / g_logo_png_len)
+#include "logo_data.h"      // Embedded NZ-FPS-Limiter_logo.png bytes (g_logo_png / g_logo_png_len)
 
 #include <Windows.h>
 #include <shellapi.h>       // ShellExecuteA (open Discord link)
 #include <intrin.h>         // _mm_pause (spin-wait hint)
-#include <wincodec.h>       // WIC: decode NightZoom_logo.png (system component, no extra dep)
+#include <wincodec.h>       // WIC: decode NZ-FPS-Limiter_logo.png (system component, no extra dep)
 #include <wrl/client.h>     // Microsoft::WRL::ComPtr
 #include <chrono>
 #include <thread>
@@ -41,7 +41,7 @@
 static constexpr double kTargetFps = 60.0;
 static constexpr std::chrono::duration<double> kFrameInterval{ 1.0 / kTargetFps };
 
-static constexpr const char *kConfigSection = "NightZoom";
+static constexpr const char *kConfigSection = "NZ-FPS-Limiter";
 static constexpr const char *kConfigKey     = "LimitTo60";
 
 static constexpr const char *kDiscordUrl = "https://discord.gg/nightzoom";
@@ -229,7 +229,7 @@ static void on_destroy_effect_runtime(reshade::api::effect_runtime *)
 // ---------------------------------------------------------------------------
 
 // Draws the real logo texture if one was loaded; otherwise a bordered
-// "[ NightZoom logo ]" placeholder at a fixed 200x80 size.
+// "[ NightZoom FPS Limiter logo ]" placeholder at a fixed 200x80 size.
 static void draw_logo()
 {
 	if (g_logo_view.handle != 0)
@@ -249,7 +249,7 @@ static void draw_logo()
 	draw->AddRect(pos, ImVec2(pos.x + size.x, pos.y + size.y),
 	              ImGui::GetColorU32(ImGuiCol_Border), 4.0f);
 
-	const char *label = "[ NightZoom logo ]";
+	const char *label = "[ NightZoom FPS Limiter logo ]";
 	const ImVec2 text_size = ImGui::CalcTextSize(label);
 	draw->AddText(ImVec2(pos.x + (size.x - text_size.x) * 0.5f,
 	                     pos.y + (size.y - text_size.y) * 0.5f),

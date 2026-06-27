@@ -117,6 +117,9 @@ fn find_fivem_app(manual: Option<&str>) -> Option<PathBuf> {
         candidates.push(PathBuf::from(local).join("FiveM").join("FiveM.app"));
     }
 
+    // Custom install locations: the installer's Uninstall entry records InstallLocation,
+    // and the fivem:// protocol handler points at FiveM.exe (once registered).
+    candidates.extend(fivem_from_uninstall());
     if let Some(dir) = fivem_from_registry() {
         candidates.push(dir);
     }
@@ -138,6 +141,58 @@ fn fivem_from_registry() -> Option<PathBuf> {
 #[cfg(not(windows))]
 fn fivem_from_registry() -> Option<PathBuf> {
     None
+}
+
+/// Scan the Windows "Uninstall" registry (HKCU + HKLM, incl. WOW6432Node) for FiveM's
+/// entry and return its install directory. This is how custom install paths are recoverable
+/// without the user browsing — the installer writes InstallLocation / DisplayIcon there.
+#[cfg(windows)]
+fn fivem_from_uninstall() -> Vec<PathBuf> {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    const ROOTS: [(isize, &str); 3] = [
+        (HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
+        (HKEY_LOCAL_MACHINE, r"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
+        (HKEY_LOCAL_MACHINE, r"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
+    ];
+
+    let mut out: Vec<PathBuf> = Vec::new();
+    for (root, path) in ROOTS {
+        let hk = RegKey::predef(root);
+        let unins = match hk.open_subkey(path) {
+            Ok(k) => k,
+            Err(_) => continue,
+        };
+        for sub in unins.enum_keys().flatten() {
+            let app = match unins.open_subkey(&sub) {
+                Ok(k) => k,
+                Err(_) => continue,
+            };
+            let name: String = app.get_value("DisplayName").unwrap_or_default();
+            if !name.to_lowercase().contains("fivem") {
+                continue;
+            }
+            // InstallLocation is the FiveM root dir; DisplayIcon is the FiveM.exe path.
+            if let Ok(loc) = app.get_value::<String, _>("InstallLocation") {
+                let p = PathBuf::from(loc.trim().trim_matches('"'));
+                if !p.as_os_str().is_empty() {
+                    out.push(p);
+                }
+            }
+            if let Ok(icon) = app.get_value::<String, _>("DisplayIcon") {
+                if let Some(dir) = parse_exe_dir(&icon) {
+                    out.push(dir);
+                }
+            }
+        }
+    }
+    out
+}
+
+#[cfg(not(windows))]
+fn fivem_from_uninstall() -> Vec<PathBuf> {
+    Vec::new()
 }
 
 fn parse_exe_dir(cmd: &str) -> Option<PathBuf> {

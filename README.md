@@ -39,9 +39,10 @@ Only the headers needed to compile are included — not the full ReShade source 
 
 - `deps/reshade/` — the addon SDK headers from the official
   [crosire/reshade](https://github.com/crosire/reshade) repo (`include/` folder, `main` branch).
-- `deps/imgui/` — `imgui.h` + `imconfig.h` from
-  [ocornut/imgui](https://github.com/ocornut/imgui) tag **v1.92.5**
-  (`IMGUI_VERSION_NUM 19250`), the exact version the ReShade overlay header expects.
+- `deps/imgui/` — `imgui.h` + `imconfig.h` from the **docking branch** of
+  [ocornut/imgui](https://github.com/ocornut/imgui) at the exact commit ReShade pins as its
+  submodule (`3912b3d`, `IMGUI_VERSION_NUM 19250`). The docking branch is required — the
+  ReShade overlay header uses docking-only types (`ImGuiDockNodeFlags`, `ImGuiWindowClass`).
   Only the declarations are needed; the addon calls ReShade's bundled ImGui at runtime
   through the function table, so no ImGui `.cpp` is compiled.
 
@@ -54,9 +55,10 @@ for f in reshade.hpp reshade_api.hpp reshade_api_device.hpp reshade_api_format.h
   curl -fsSL -o "deps/reshade/$f" "https://raw.githubusercontent.com/crosire/reshade/main/include/$f"
 done
 
-# Matching Dear ImGui declarations
+# Matching Dear ImGui declarations (docking branch, exact ReShade submodule commit)
+IMGUI_SHA=3912b3d9a9c1b3f17431aebafd86d2f40ee6e59c
 for f in imgui.h imconfig.h; do
-  curl -fsSL -o "deps/imgui/$f" "https://raw.githubusercontent.com/ocornut/imgui/v1.92.5/$f"
+  curl -fsSL -o "deps/imgui/$f" "https://raw.githubusercontent.com/ocornut/imgui/$IMGUI_SHA/$f"
 done
 ```
 

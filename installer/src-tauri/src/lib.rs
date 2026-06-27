@@ -245,6 +245,8 @@ fn download_latest_zip(app: &AppHandle) -> Result<Vec<u8>, String> {
         .json()
         .map_err(|e| format!("Bad response from GitHub: {e}"))?;
 
+    // Asset-name contract with .github/workflows/build.yml: it ships the bundle as
+    // `NZ-FPS-Limiter_v<version>.zip`. If that name ever changes, update this match.
     let url = json["assets"]
         .as_array()
         .and_then(|assets| {

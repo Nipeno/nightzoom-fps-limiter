@@ -273,7 +273,7 @@
   <div class="window" role="application" aria-label="NightZoom FPS Limiter installer">
     <div class="titlebar" data-tauri-drag-region>
       <div class="tb-left">
-        <span class="tb-title">NightZoom Setup</span>
+        <span class="tb-title">NightZoom FPS Limiter Setup</span>
       </div>
       <div class="tb-x" id="tb-close" aria-label="Close">
         <svg width="11" height="11" viewBox="0 0 11 11"><path d="M1 1l9 9M10 1l-9 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -334,9 +334,9 @@
 
         <!-- 1. Welcome -->
         <section class="screen is-active" data-screen="welcome">
-          <div class="eyebrow">FiveM · 60 FPS Lock</div>
+          <div class="eyebrow">FiveM FPS Limiter</div>
           <h1>Smooth <span class="accent">60 FPS</span>,<br>locked in.</h1>
-          <p class="lede">Installs the 60 FPS limiter into FiveM so the handling stays right on racing servers. <strong>No account, no settings</strong> — install and play.</p>
+          <p class="lede">Installs the FPS limiter into FiveM so the handling stays right on racing servers.</p>
           <div class="pathchip" id="welcome-pathchip">
             <span class="tick">✓</span>
             <span class="meta">
@@ -363,7 +363,7 @@
         <section class="screen" data-screen="detecting">
           <div class="eyebrow">Step 1 · Locate</div>
           <h1>Finding your<br>FiveM install…</h1>
-          <p class="lede">Checking the usual spots. This only takes a second — you don't need to do anything.</p>
+          <p class="lede">Checking the usual spots. This only takes a second - you don't need to do anything.</p>
           <div class="scan">
             <span class="ring"></span>
             <span class="txt">Checking <b id="scan-path">%LocalAppData%\FiveM</b></span>
@@ -384,7 +384,7 @@
             <div class="choice sel" data-replace="true" onclick="pick(this)">
               <span class="radio"></span>
               <div class="ctitle">Replace with bundled <span class="badge">Recommended</span></div>
-              <div class="cdesc">Swaps in NightZoom's tested ReShade. Guaranteed to work with the limiter, and your graphics pack keeps running.</div>
+              <div class="cdesc">Swaps in NightZoom FPS Limiter's tested ReShade. Guaranteed to work with the limiter, and your graphics pack keeps running.</div>
             </div>
             <div class="choice" data-replace="false" onclick="pick(this)">
               <span class="radio"></span>
@@ -401,7 +401,7 @@
         <section class="screen" data-screen="installing">
           <div class="eyebrow">Step 3 · Install</div>
           <h1>Installing</h1>
-          <p class="lede">Setting up the 60 FPS limiter. <strong>Keep FiveM closed</strong> until this finishes.</p>
+          <p class="lede">Setting up the FPS limiter. <strong>Keep FiveM closed</strong> until this finishes.</p>
           <div class="progress">
             <div class="pbar"><div class="pfill" id="pfill"></div></div>
             <div class="pmeta">
@@ -443,7 +443,7 @@
             </div>
             <h1 class="err-title" id="err-title">FiveM is open</h1>
           </div>
-          <p class="lede" id="err-msg">Close FiveM so we can update its files, then try again. If that doesn't fix it, run the installer as administrator.</p>
+          <p class="lede" id="err-msg">Close FiveM so we can update its files, then try again. If that doesn't fix it, try running the installer as administrator.</p>
           <div class="actions" id="err-actions"></div>
         </section>
 
@@ -537,7 +537,7 @@
   const ERRORS={
     notfound:{t:"Couldn't find FiveM", m:"We checked the usual spots but came up empty. Point us at your FiveM folder and we'll take it from there.",
       a:[['Browse…','btn-primary'],['Close','btn-ghost']]},
-    locked:{t:"FiveM is open", m:"Close FiveM so we can update its files, then try again. If that doesn't fix it, run the installer as administrator.",
+    locked:{t:"FiveM is open", m:"Close FiveM so we can update its files, then try again. If that doesn't fix it, try running the installer as administrator.",
       a:[['Retry','btn-primary'],['Run as administrator','btn-amber']]},
     download:{t:"Download failed", m:"We couldn't reach the server. Check your internet connection and try again.",
       a:[['Retry','btn-primary'],['Close','btn-ghost']]}
@@ -559,7 +559,6 @@
   function go(key){
     clearAnim();
     document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('is-active', s.dataset.screen===key));
-    document.querySelectorAll('.sw').forEach(b=>b.classList.toggle('sel', b.dataset.key===key));
     current=key;
     applyState(key);
     if(key==='detecting'){ animDetect(); }
@@ -692,7 +691,7 @@
     // ---- error handling ----
     function showError(variant){
       go('error');
-      errVar(variant, null);
+      errVar(variant);
       wireErrorButtons(variant);
     }
     function showInstallError(msg){
@@ -701,7 +700,7 @@
                     : /github|download|reach|internet|interrupted/i.test(msg) ? 'download'
                     : 'locked';
       go('error');
-      errVar(variant, null);
+      errVar(variant);
       const m=document.getElementById('err-msg'); if(m) m.textContent=msg;
       wireErrorButtons(variant);
     }

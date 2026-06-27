@@ -50,8 +50,10 @@ cargo tauri build
 
 ## Notes / TODO
 - **Unsigned** → SmartScreen will warn ("More info → Run anyway"). Expected for now.
-- **WebView2** runtime is assumed present (it is on Win10 2020+/Win11). If we ever target
-  older boxes, switch the bundle to NSIS with the WebView2 bootstrapper embedded.
+- **WebView2** runtime is required and assumed present — it ships by default on Win10 (2020+)
+  and Win11, i.e. effectively every FiveM box. A cold machine without it shows a blank window;
+  tell those users to install the Evergreen WebView2 runtime from Microsoft. (Decided: ship the
+  raw portable exe + this doc note rather than an NSIS bundle with the bootstrapper embedded.)
 - The frontend is a copy of the design mockup (`nightzoom-installer-ui.html`). When the
   design changes, re-sync `ui/index.html` (keep the `TAURI` controller block at the end).
 - Distribute the raw `nz-installer.exe`; download-mode means it carries no DLLs itself.

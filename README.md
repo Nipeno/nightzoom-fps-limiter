@@ -104,7 +104,7 @@ ReShade is probably **too old** to load it (your `ReShade.log` will say somethin
 
 **Fix:** download the **`NightZoom-ReShade-Bundle…zip`** and copy its **`dxgi.dll`** into your
 `plugins` folder, replacing the old one. It's the latest official ReShade — it still runs NVE /
-QuantV fine (newer ReShade loads older add-ons), it just also supports NightZoom.
+QuantV fine (newer ReShade loads older add-ons), it just also supports NightZoom FPS Limiter.
 
 ## How to uninstall
 

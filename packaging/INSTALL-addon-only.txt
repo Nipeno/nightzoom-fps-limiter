@@ -90,7 +90,7 @@ Fix: get a newer ReShade.
 
 This is the latest official ReShade and still works fine with
 NVE / QuantV (newer ReShade runs older add-ons), it just also
-supports NightZoom.
+supports NightZoom FPS Limiter.
 
 Releases: https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest
 

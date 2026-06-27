@@ -7,8 +7,7 @@ one button — turn it on to cap, turn it off to unlock.
 
 ## ⚠️ Please read first
 
-This add-on is made for the **NightZoom** server and is allowed there (cleared with the server
-owner). On **other servers, use it at your own risk** — every server sets its own rules, and some
+This add-on is made for the **NightZoom** server and is probably allowed there (waiting for BJJ to respond to my DM). On **other servers, use it at your own risk** — every server sets its own rules, and some
 anticheats may flag add-ons that load into the game. If you're unsure about a server, ask its
 staff first, or just don't use it there.
 

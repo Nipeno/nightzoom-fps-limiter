@@ -87,9 +87,8 @@ jobs:
           body: |
             Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
 
-            **How to install:** download and extract the zip, then open the included
-            **`INSTALL.html`** for the full step-by-step. The zip bundles ReShade, so it's
-            all you need (already have ReShade? `INSTALL.html` says what to skip).
+            **Install:** download the zip, extract it, and open **`INSTALL.html`** -
+            follow the steps. (It bundles ReShade, so it's all you need.)
 
             💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).
           files: ${{ env.bundle_zip }}

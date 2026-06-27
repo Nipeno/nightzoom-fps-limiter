@@ -38,7 +38,11 @@ The output is `build/Release/NightZoom.addon64`.
 Only the headers needed to compile are included — not the full ReShade source tree:
 
 - `deps/reshade/` — the addon SDK headers from the official
-  [crosire/reshade](https://github.com/crosire/reshade) repo (`include/` folder, `main` branch).
+  [crosire/reshade](https://github.com/crosire/reshade) repo (`include/` folder, tag **v6.7.3**,
+  addon **API version 18**). The addon's API version must be **&le;** the ReShade build it
+  loads into — ReShade loads older addons but refuses newer ones. v6.7.3 (API 18) covers
+  ReShade **6.6.0–6.7.3**; if your ReShade is newer, bump this to a matching tag (or just
+  update ReShade).
 - `deps/imgui/` — `imgui.h` + `imconfig.h` from the **docking branch** of
   [ocornut/imgui](https://github.com/ocornut/imgui) at the exact commit ReShade pins as its
   submodule (`3912b3d`, `IMGUI_VERSION_NUM 19250`). The docking branch is required — the
@@ -50,9 +54,10 @@ To refresh them:
 
 ```sh
 # ReShade addon SDK headers
+RESHADE_REF=v6.7.3   # addon API version 18
 for f in reshade.hpp reshade_api.hpp reshade_api_device.hpp reshade_api_format.hpp \
          reshade_api_pipeline.hpp reshade_api_resource.hpp reshade_events.hpp reshade_overlay.hpp; do
-  curl -fsSL -o "deps/reshade/$f" "https://raw.githubusercontent.com/crosire/reshade/main/include/$f"
+  curl -fsSL -o "deps/reshade/$f" "https://raw.githubusercontent.com/crosire/reshade/$RESHADE_REF/include/$f"
 done
 
 # Matching Dear ImGui declarations (docking branch, exact ReShade submodule commit)

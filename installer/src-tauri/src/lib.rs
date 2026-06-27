@@ -81,20 +81,34 @@ fn reshade_id(name: &str) -> String {
     format!("{:08x}", h)
 }
 
-fn is_fivem_app(dir: &Path) -> bool {
-    dir.join("FiveM.exe").exists()
-        || dir.join("CitizenFX.ini").exists()
-        || dir.join("plugins").exists()
+/// Resolve any candidate folder to the actual `FiveM.app` directory — the one that holds
+/// `plugins\` and `CitizenFX.ini`. Handles the three shapes a user/registry hands us:
+///   - they picked `FiveM.app` itself,
+///   - they picked the parent that contains it (FiveM.exe sits in the parent on custom installs),
+///   - a never-launched install where `CitizenFX.ini` / `plugins\` don't exist yet — we still
+///     recognise `FiveM.app` by its folder name so detection works before first launch.
+fn resolve_fivem_app(dir: &Path) -> Option<PathBuf> {
+    let named_app = dir
+        .file_name()
+        .map(|n| n.eq_ignore_ascii_case("FiveM.app"))
+        .unwrap_or(false);
+    // Already the app folder (by name, or by the files a launched install leaves behind).
+    if named_app || dir.join("CitizenFX.ini").exists() || dir.join("plugins").is_dir() {
+        return Some(dir.to_path_buf());
+    }
+    // Parent that contains a FiveM.app subfolder (custom-path install; FiveM.exe lives here).
+    let sub = dir.join("FiveM.app");
+    if sub.is_dir() {
+        return Some(sub);
+    }
+    None
 }
 
 fn find_fivem_app(manual: Option<&str>) -> Option<PathBuf> {
     let mut candidates: Vec<PathBuf> = Vec::new();
 
     if let Some(m) = manual {
-        let p = PathBuf::from(m);
-        // Accept either the FiveM.app folder itself or its parent (e.g. user picked FiveM\).
-        candidates.push(p.clone());
-        candidates.push(p.join("FiveM.app"));
+        candidates.push(PathBuf::from(m));
     }
 
     if let Ok(local) = std::env::var("LOCALAPPDATA") {
@@ -105,7 +119,7 @@ fn find_fivem_app(manual: Option<&str>) -> Option<PathBuf> {
         candidates.push(dir);
     }
 
-    candidates.into_iter().find(|d| is_fivem_app(d))
+    candidates.into_iter().find_map(|d| resolve_fivem_app(&d))
 }
 
 /// Read the fivem:// protocol handler and pull the FiveM.exe directory out of it.

@@ -19,11 +19,11 @@ installer/
 ```
 
 ## How the UI talks to the backend
-`ui/index.html` detects `window.__TAURI__`:
-- **In a browser** → runs the original mockup (screen switcher, arrow keys, fake timers).
-  Open the file directly to preview the design.
-- **In the app** → hides the preview chrome, calls the Rust commands, and drives the
-  install screen from `progress` events.
+`ui/index.html` is the **production** UI — no preview scaffolding, no debug screen
+switcher. It calls the Rust commands and drives the install screen from `progress`
+events. Opening it bare in a browser just shows the first screen (no `window.__TAURI__`).
+For design iteration use the standalone mockup (`nightzoom-installer-ui.html`), which keeps
+the screen switcher; port visual changes back here afterwards.
 
 Commands (`src-tauri/src/lib.rs`):
 | Command | Args | Returns |

@@ -1,137 +1,61 @@
 # NightZoom FPS Limiter
 
-A small, open-source [ReShade](https://reshade.me) addon that hard-caps your game's frame
-rate to **exactly 60 FPS**. It adds its own window to the ReShade overlay with a single
-checkbox — tick it to cap, untick to remove the cap.
+Locks your game to a smooth **60 FPS**. A simple add-on for [ReShade](https://reshade.me) with
+one button — turn it on to cap, turn it off to unlock.
 
-> Made by **Nipeno** · [Discord](https://discord.gg/nightzoom) · Licensed under **GPLv3**
+> Made by **Nipeno** · 💬 [Join the Discord](https://discord.gg/nightzoom)
 
-## What it does (and what it doesn't)
+## ⚠️ Please read first
 
-The whole point of this being open source is that you can read exactly what you're installing.
-In short:
+This add-on works by loading into your game. That's fine for **single-player** games. But in
+**online games with anticheat** (like GTA Online / FiveM), loading add-ons like this **can get
+you banned** — so don't use it there. If you only want a 60 FPS cap online, use **RivaTuner
+(RTSS)** or your graphics driver's frame-rate limit instead.
 
-- ✅ Caps the frame rate to 60 FPS by pacing the `present` event with a hybrid sleep + busy-wait.
-- ✅ Remembers the checkbox state across restarts via ReShade's own config.
-- ✅ Shows a logo, a credit line, a Discord link, and a link back to this repo.
-- ❌ **No telemetry, no analytics, no network access.** The only outbound action is opening
-  your browser when *you* click the Discord or GitHub buttons.
-- ❌ No file writing of its own (state lives in ReShade's config).
-- ❌ No game memory editing, no upscaling, no swapchain surgery — it only times frames.
+Also: you need the version of ReShade that supports add-ons (see step 1 below).
 
-Everything lives in a single source file: [`src/main.cpp`](src/main.cpp).
+## How to install
 
-## ⚠️ Requirements & ban warning
+1. **Install ReShade with add-on support.** Download it from <https://reshade.me>, run the
+   installer, pick your game, and make sure **"add-on support"** is ticked during setup.
+2. **Download** `NightZoom.addon64` from the [**Releases page**](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest).
+3. **Drop the file into your game's folder** — the same folder where ReShade was installed
+   (it's next to a file like `dxgi.dll` or `d3d11.dll`).
+4. **Start the game.**
 
-- **Requires the ADDON-ENABLED build of ReShade.** Get it from <https://reshade.me> and tick
-  "addon support" during setup. The addon also needs to target an API version your ReShade
-  supports — see [Compatibility](#compatibility).
-- **Anticheat / ban risk.** This is a DLL injected into the game process. Injecting addons
-  into anticheat-protected **online** games (e.g. GTA Online / FiveM) can get your account
-  or hardware banned — anticheats flag the *injection*, not the harmless feature. **Intended
-  for single-player / development use.** For a 60 FPS cap in online games, use an external
-  tool instead (RTSS, or the NVIDIA/AMD driver frame-rate limit) — nothing gets injected.
+## How to use
 
-## Install
+1. In-game, open the ReShade menu (press **Home** by default).
+2. Find the **NightZoom FPS Limiter** window.
+3. Tick **Limit to 60 FPS** to cap your frame rate. Untick it to unlock.
 
-1. Get `NightZoom.addon64` (download a prebuilt one or [build it yourself](#build-from-source)).
-2. Drop it into the game's folder next to the ReShade DLL (e.g. `dxgi.dll` / `d3d11.dll`).
-3. Launch the game, open the ReShade overlay (`Home` by default), find the
-   **NightZoom FPS Limiter** window, and tick **Limit to 60 FPS**.
+Your choice is remembered — it stays the same next time you launch the game.
 
-That's it — a single `.addon64` file. The logo is baked into the DLL, so there's nothing else
-to copy.
+## Is it safe? What does it do?
 
-## Build from source
+This add-on is **open source**, so anyone can read exactly what it does. It only:
 
-Prerequisites: Visual Studio 2022 ("Desktop development with C++" workload) and CMake 3.20+.
-Windows x64 only.
+- caps your frame rate to 60 FPS,
+- remembers your on/off choice,
+- shows the logo, Discord link, and a link to the code.
 
-```sh
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64
-cmake --build build --config Release
-# -> build/Release/NightZoom.addon64
-```
+It has **no ads, no tracking, no internet connection** (the only time it opens your browser is
+when *you* click the Discord or GitHub buttons), and it doesn't touch your game's files.
 
-Continuous integration builds the addon on every push via GitHub Actions
-([`.github/workflows/build.yml`](.github/workflows/build.yml)); the compiled `.addon64` is
-attached as a build artifact.
-
-### Dependencies
-
-Only the headers needed to compile are vendored under `deps/` — not the full ReShade source:
-
-- **`deps/reshade/`** — addon SDK headers from [crosire/reshade](https://github.com/crosire/reshade),
-  tag **v6.7.3** (addon **API version 18**).
-- **`deps/imgui/`** — `imgui.h` + `imconfig.h` from the **docking branch** of
-  [ocornut/imgui](https://github.com/ocornut/imgui) at the exact commit ReShade pins
-  (`3912b3d`, `IMGUI_VERSION_NUM 19250`). The docking branch is required: the ReShade overlay
-  header uses docking-only types. Only declarations are needed — the addon calls ReShade's
-  bundled ImGui at runtime through the function table, so no ImGui `.cpp` is compiled.
-
-Everything else is Windows system libraries: `winmm` (timer granularity), `shell32`
-(open links), `windowscodecs` + `ole32` (WIC, to decode the embedded logo).
-
-To refresh the vendored headers:
-
-```sh
-RESHADE_REF=v6.7.3   # addon API version 18
-for f in reshade.hpp reshade_api.hpp reshade_api_device.hpp reshade_api_format.hpp \
-         reshade_api_pipeline.hpp reshade_api_resource.hpp reshade_events.hpp reshade_overlay.hpp; do
-  curl -fsSL -o "deps/reshade/$f" "https://raw.githubusercontent.com/crosire/reshade/$RESHADE_REF/include/$f"
-done
-
-IMGUI_SHA=3912b3d9a9c1b3f17431aebafd86d2f40ee6e59c   # must match IMGUI_VERSION_NUM in reshade_overlay.hpp
-for f in imgui.h imconfig.h; do
-  curl -fsSL -o "deps/imgui/$f" "https://raw.githubusercontent.com/ocornut/imgui/$IMGUI_SHA/$f"
-done
-```
-
-## Compatibility
-
-A ReShade addon must target an API version **≤** the ReShade build it loads into — ReShade
-loads older addons but refuses newer ones. This addon is built against **API 18** (ReShade
-**v6.6.0 – v6.7.3**). If your ReShade refuses to load it with a message like
-`requested API version (X) is not supported (Y)`, either update ReShade, or rebuild against the
-matching `deps/reshade` tag (see refresh steps above).
-
-## How it works
-
-- **Frame cap** — in the `present` callback we measure time since the last present and, when
-  enabled, block until one 1/60 s interval has elapsed: sleep until ~1 ms before target, then
-  busy-wait the remainder for frame-accurate pacing (a plain `Sleep` stutters due to timer
-  granularity). `timeBeginPeriod(1)`/`timeEndPeriod(1)` tighten sleep granularity.
-- **Persistence** — the checkbox value is read/written with `reshade::get/set_config_value`
-  under the `[NightZoom]` config section.
-- **Logo** — embedded as a byte array in [`src/logo_data.h`](src/logo_data.h), decoded from
-  memory via WIC and uploaded as a ReShade texture. If decoding ever fails, a bordered
-  `[ NightZoom logo ]` placeholder is drawn instead.
-
-### Changing the logo
-
-Replace `src/logo_data.h` with a freshly generated header:
-
-```sh
-sips -z 512 512 your-logo.png --out /tmp/logo.png                                   # resize
-pngquant --quality=70-90 --strip --force --output /tmp/logo.png /tmp/logo.png       # compress
-{ echo '#pragma once'; echo; xxd -i -n g_logo_png /tmp/logo.png; } > src/logo_data.h
-```
+The full source code is right here in this repo, and there's a **View Source on GitHub** button
+inside the add-on too.
 
 ## Community
 
-This addon is made for **NightZoom**. Questions, bug reports, or just want to hang out?
+Made for **NightZoom**. Come say hi, get help, or report a bug:
 
-👉 **Join the Discord: <https://discord.gg/nightzoom>**
+👉 **<https://discord.gg/nightzoom>**
 
-The same link is available in-app via the **Join the Discord** button in the overlay window.
+## For developers
+
+Want to build it yourself or see how it works? See **[BUILDING.md](BUILDING.md)**.
 
 ## License
 
-GPLv3 — see [LICENSE](LICENSE). You're free to use, study, modify, and redistribute this,
-but any distributed fork or derivative must also be open-sourced under the GPL. No closed-source
-forks.
-
-## Credits
-
-Made by **Nipeno** · [NightZoom Discord](https://discord.gg/nightzoom).
-Built on [ReShade](https://reshade.me) and [Dear ImGui](https://github.com/ocornut/imgui).
+Free and open source under **GPLv3** — see [LICENSE](LICENSE). You can use, study, and modify it,
+but any shared version must stay open source too.

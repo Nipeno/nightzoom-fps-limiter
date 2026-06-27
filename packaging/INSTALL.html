@@ -59,8 +59,8 @@
   h1{font-size:1.9rem; margin:.5em 0 .15em; letter-spacing:.2px}
   .tag{color:var(--muted); font-size:1.02rem; margin:0}
   .by{color:var(--muted); font-size:.92rem; margin-top:14px}
-  .by a{color:inherit; text-decoration:none; border-bottom:1px dotted var(--muted); transition:.15s}
-  .by a:hover{color:var(--text); border-bottom-color:var(--text)}
+  .by a, a.subtle{color:inherit; text-decoration:none; border-bottom:1px dotted var(--muted); transition:.15s}
+  .by a:hover, a.subtle:hover{color:var(--text); border-bottom-color:var(--text)}
   .btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px}
   .btn{
     display:inline-block; padding:9px 16px; border-radius:9px; text-decoration:none;
@@ -102,7 +102,8 @@
   .callout.good .ttl{color:var(--good)} .callout.warn .ttl{color:var(--warn)}
   ul{padding-left:1.25em} li{margin:.25em 0}
   footer{margin-top:48px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:.88rem; text-align:center}
-  footer a{color:var(--muted)}
+  footer a{color:inherit; text-decoration:none; border-bottom:1px dotted var(--muted); transition:.15s}
+  footer a:hover{color:var(--text); border-bottom-color:var(--text)}
 </style>
 </head>
 <body>
@@ -137,18 +138,18 @@
       <code>dxgi.dll</code>, <code>NZ-FPS-Limiter.addon64</code>, <code>Enable-ReShade.bat</code> - into the plugins folder.
       <div class="callout warn" style="margin-top:12px">
         <p class="ttl">Already have ReShade? <span class="note" style="font-weight:400">(NVE, QuantV, other graphics pack)</span></p>
-        Don't drag <code>dxgi.dll</code> - that <b>is</b> ReShade, and you already have it (two copies conflict).
-        Just drag the other two files.
+        Don't drag <code>dxgi.dll</code> - that <b>is</b> ReShade, and you already have it. Dropping ours
+        would overwrite your graphics pack's ReShade, so leave your existing one in place. Just drag the other two files.
       </div>
-      <p class="note">Drag the <b>files</b> themselves, not the folder - the plugins folder should show
-      <code>dxgi.dll</code> directly, not a sub-folder.</p>
+      <p class="note">Drag the <b>files</b> themselves, not the folder - all three should sit
+      <b>directly</b> inside the plugins folder, not inside a sub-folder.</p>
     </li>
     <li>
       <p class="lead">Allow ReShade in FiveM <span class="note">(one time)</span>.</p>
       In the plugins folder you just filled, double-click <b>Enable-ReShade.bat</b>. It sets everything up by itself - press a key to close it.
       <ul>
         <li>Blue <b>"Windows protected your PC"</b> box? Click <b>More info → Run anyway</b>. (It's open source - open it in Notepad first if you like.)</li>
-        <li>Says it couldn't find FiveM? See <a href="#manual">If the .bat can't find FiveM</a> below.</li>
+        <li>Says it couldn't find FiveM? See <a class="subtle" href="#manual">If the .bat can't find FiveM</a> below.</li>
       </ul>
     </li>
     <li>

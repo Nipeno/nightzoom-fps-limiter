@@ -15,26 +15,12 @@ Also: this needs the **add-on-enabled** build of ReShade - and the download incl
 you're covered even if you've never used ReShade. Graphics packs like NVE and QuantV already
 include ReShade too.
 
-## How to install (FiveM)
-
-Everything goes in your FiveM **plugins** folder. Open it with **Win+R** →
-paste `%localappdata%\FiveM\FiveM.app\plugins` → Enter. (Installed FiveM somewhere custom? That
-path won't open - instead go into `FiveM.app\plugins` inside your own FiveM folder, the one with
-`FiveM.exe`.)
+## How to install
 
 Download **`NZ-FPS-Limiter…zip`** from the
-[**Releases page**](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest) - it
-includes ReShade, so it's all you need.
-
-1. In the zip, open the **`Copy-these-into-plugins`** folder and drag its files into your
-   `plugins` folder.
-2. **Already have ReShade?** (NVE, QuantV, another graphics pack - the ReShade menu already
-   opens in game.) **Don't** drag **`dxgi.dll`** (that's ReShade; two copies conflict) - drag the
-   other two files, then jump to [How to use](#how-to-use).
-3. Double-click **`Enable-ReShade.bat`** from your `plugins` folder to allow ReShade in FiveM,
-   then start FiveM.
-
-The included `INSTALL.html` has the full step-by-step - just double-click it to open in your browser.
+[**Releases page**](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest), extract it,
+and open the included **`INSTALL.html`** - it walks you through the whole setup, including the
+one-time FiveM "ReShade was blocked" fix. The zip bundles ReShade, so it's all you need.
 
 ## How to use
 
@@ -52,64 +38,6 @@ Your choice is remembered - it stays the same next time you launch the game.
 GTA's physics is tied to your frame rate - higher FPS can change how a car behaves. On a racing
 server that's unfair: people on stronger PCs would get an edge. Capping everyone to 60 FPS keeps
 the physics consistent so nobody has an advantage.
-
-## First launch: "ReShade was blocked" (one-time fix)
-
-FiveM blocks modern ReShade by default, so you allow it once. **Two ways:**
-
-### Easy (recommended) - run the included `.bat`
-
-After you've copied the files into your `plugins` folder, double-click **`Enable-ReShade.bat`**
-**from that folder** (not from inside the zip - extract first). It figures out the right per-PC
-value and writes it to `CitizenFX.ini` automatically - then start FiveM.
-
-> If Windows shows a blue **"Windows protected your PC"** box, click **More info → Run anyway**.
-> The script is open source ([`packaging/Enable-ReShade.bat`](packaging/Enable-ReShade.bat)) - read
-> it first if you like.
-
-### Manual (if you prefer, or the .bat can't find FiveM)
-
-The first time, FiveM's console shows red text like:
-
-```
-Blocked load of ReShade version 5 or higher ...
-add the following section to <path>\CitizenFX.ini:
-   [Addons]
-   ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to game crashes
-```
-
-1. Fully close FiveM.
-2. Open **`CitizenFX.ini`** - it's in your `FiveM.app` folder; the console shows the exact path.
-3. Add the two lines **exactly as your own console showed them**:
-   ```ini
-   [Addons]
-   ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to game crashes
-   ```
-   > ⚠️ The ID (`xxxxxxxx`) is **unique to your PC** - copy it from your own FiveM console, don't
-   > use the example above.
-4. Save and start FiveM again.
-
-If you already use ReShade with FiveM (e.g. via NVE / QuantV), you've probably done this already
-and can skip it.
-
-## NightZoom FPS Limiter window doesn't show up?
-
-If you enabled ReShade but the **NightZoom FPS Limiter** window still isn't there, your existing
-ReShade is probably **too old** to load it (your `ReShade.log` will say something like
-`requested API version … is not supported`). This happens with some older graphics-pack bundles.
-
-**Fix:** copy the bundled **`dxgi.dll`** (from the `NZ-FPS-Limiter…zip` you downloaded) into your
-`plugins` folder, replacing the old one. It's the latest official ReShade - it still runs NVE /
-QuantV fine (newer ReShade loads older add-ons), it just also supports NightZoom FPS Limiter.
-
-## How to uninstall
-
-1. Close FiveM.
-2. Open the plugins folder: `%localappdata%\FiveM\FiveM.app\plugins`.
-3. Delete **`NZ-FPS-Limiter.addon64`**.
-4. Only if you installed the bundled `dxgi.dll` just for this and want ReShade gone too,
-   also delete `dxgi.dll`. If your graphics pack (NVE / QuantV) put ReShade there, **leave
-   `dxgi.dll` alone**.
 
 ## Is it safe? What does it do?
 

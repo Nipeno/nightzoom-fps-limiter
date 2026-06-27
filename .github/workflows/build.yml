@@ -60,6 +60,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item build/Release/NightZoom.addon64 dist/
           Copy-Item dxgi.dll                         dist/
+          Copy-Item packaging/Enable-ReShade.bat     dist/
           Copy-Item packaging/INSTALL.txt            dist/
           Copy-Item third_party/ReShade-LICENSE.txt  dist/
           Copy-Item LICENSE                          dist/LICENSE.txt
@@ -72,6 +73,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path dist-addon | Out-Null
           Copy-Item build/Release/NightZoom.addon64       dist-addon/
+          Copy-Item packaging/Enable-ReShade.bat          dist-addon/
           Copy-Item packaging/INSTALL-addon-only.txt      dist-addon/INSTALL.txt
           Copy-Item LICENSE                               dist-addon/LICENSE.txt
           $zip = "NightZoom-Addon-Only.zip"

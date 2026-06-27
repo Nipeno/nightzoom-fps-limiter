@@ -59,28 +59,38 @@ the physics consistent so nobody has an advantage.
 
 ## First launch: "ReShade was blocked" (one-time fix)
 
-FiveM blocks modern ReShade by default. The **first** time, you may see red text in the FiveM
-console like:
+FiveM blocks modern ReShade by default, so you allow it once. **Two ways:**
+
+### Easy (recommended) — run the included `.bat`
+
+After the files are in your `plugins` folder, double-click **`Enable-ReShade.bat`** (it's in the
+zip). It figures out the right per-PC value and writes it to `CitizenFX.ini` automatically — then
+start FiveM.
+
+> If Windows shows a blue **"Windows protected your PC"** box, click **More info → Run anyway**.
+> The script is open source ([`packaging/Enable-ReShade.bat`](packaging/Enable-ReShade.bat)) — read
+> it first if you like.
+
+### Manual (if you prefer, or the .bat can't find FiveM)
+
+The first time, FiveM's console shows red text like:
 
 ```
 Blocked load of ReShade version 5 or higher ...
-If you want to force it to load anyway, add the following section to <path>\CitizenFX.ini:
+add the following section to <path>\CitizenFX.ini:
    [Addons]
    ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to game crashes
 ```
 
-To allow it (you only do this once):
-
 1. Fully close FiveM.
-2. Open **`CitizenFX.ini`** — it's in your `FiveM.app` folder, and the console message shows you
-   the exact full path.
+2. Open **`CitizenFX.ini`** — it's in your `FiveM.app` folder; the console shows the exact path.
 3. Add the two lines **exactly as your own console showed them**:
    ```ini
    [Addons]
    ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to game crashes
    ```
-   > ⚠️ The ID (`xxxxxxxx`) is **unique to your PC** — copy the line straight from your own FiveM
-   > console, don't use the example above.
+   > ⚠️ The ID (`xxxxxxxx`) is **unique to your PC** — copy it from your own FiveM console, don't
+   > use the example above.
 4. Save and start FiveM again.
 
 If you already use ReShade with FiveM (e.g. via NVE / QuantV), you've probably done this already

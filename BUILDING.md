@@ -109,6 +109,20 @@ When a `v*` **tag** is pushed, both ZIPs are also attached to the matching GitHu
 (`softprops/action-gh-release`, needs `permissions: contents: write`). The end-user install texts
 live in `packaging/INSTALL.txt` (bundle) and `packaging/INSTALL-addon-only.txt`.
 
+### `Enable-ReShade.bat` (FiveM unblock helper)
+
+`packaging/Enable-ReShade.bat` is bundled into **both** zips. FiveM blocks ReShade 5+ until the
+user adds `[Addons] ReShade5=ID:<id> acknowledged ...` to `CitizenFX.ini`. The `<id>` is
+**`Joaat(lowercase(%COMPUTERNAME%))`** — derived purely from the PC name (see FiveM
+`code/components/rage-graphics-five/src/ReShadeFixups.cpp` + `HashString` in
+`code/client/shared/Utils.h`), so it's computable offline with no FiveM launch. Validated against
+ground truth: computer name `PC` → `46750aa6`.
+
+The bat is a self-contained polyglot: a cmd header bootstraps an embedded PowerShell block (read
+from the `#:PS:#` marker) that computes the ID, locates `CitizenFX.ini` (parent of the `plugins`
+folder it ships in, then `%LOCALAPPDATA%`, then the `fivem://` registry handler), and writes the
+key via `WritePrivateProfileString` (same Win32 API FiveM reads with — safe section merge).
+
 To cut a release:
 
 ```sh

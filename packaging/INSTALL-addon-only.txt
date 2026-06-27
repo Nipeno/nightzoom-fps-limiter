@@ -46,15 +46,25 @@ HOW TO USE
 
 IF FIVEM BLOCKS RESHADE (first launch only)
 ------------------------------------------------------------
-FiveM blocks modern ReShade by default. If the add-on doesn't
-show up and you see red console text like:
+FiveM blocks modern ReShade by default. If you already use
+ReShade (NVE/QuantV), you've likely allowed it already and can
+skip this. Otherwise, allow it once - two ways:
+
+EASY (recommended):
+  - Put  NightZoom.addon64  in the plugins folder, then
+    double-click  Enable-ReShade.bat  (in this zip). It does it
+    automatically, then start FiveM.
+    (If Windows shows "Windows protected your PC", click
+     "More info" -> "Run anyway". The script is open source.)
+
+MANUAL: if the add-on doesn't show up and you see red console
+text like:
 
   Blocked load of ReShade version 5 or higher ...
   add the following section to <path>\CitizenFX.ini:
      [Addons]
      ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug...
 
-Fix it once:
   1. Fully close FiveM.
   2. Open  CitizenFX.ini  (in your FiveM.app folder - the
      console message shows the exact full path).
@@ -62,9 +72,6 @@ Fix it once:
      The ID (xxxxxxxx) is UNIQUE to your PC - copy it from your
      own console, not from this example.
   4. Save and start FiveM again.
-
-(If you already use ReShade with FiveM, you've likely done
- this already and can skip it.)
 
 
 HOW TO UNINSTALL

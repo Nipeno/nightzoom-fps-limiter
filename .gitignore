@@ -1,4 +1,5 @@
 /build/
+.DS_Store
 *.addon64
 *.dll
 *.exp

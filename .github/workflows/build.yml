@@ -84,15 +84,11 @@ jobs:
           body: |
             Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
 
-            **Download `NZ-FPS-Limiter_v…zip`** and extract it into your FiveM `plugins`
-            folder. It includes ReShade, so it's all you need.
-
-            - **Already have ReShade** (NVE / QuantV / other graphics pack)? Extract only
-              `NZ-FPS-Limiter.addon64` and skip the bundled `dxgi.dll` (two copies conflict).
-            - **No ReShade yet?** Extract everything, then run `Enable-ReShade.bat`.
-
-            The included `INSTALL.txt` has the full steps (including the one-time FiveM
-            "ReShade was blocked" fix). The bundled ReShade is the latest official build (BSD).
+            **How to install:** download the zip below, extract everything into your FiveM
+            `plugins` folder, and follow the included **`INSTALL.txt`** — it has the full
+            step-by-step, including the one-time FiveM "ReShade was blocked" fix. The zip
+            bundles ReShade, so it's all you need (already have ReShade? `INSTALL.txt` says
+            what to skip).
 
             💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).
           files: ${{ env.bundle_zip }}

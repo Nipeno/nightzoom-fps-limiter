@@ -12,6 +12,7 @@
 
 #include <imgui.h>          // Must be included BEFORE reshade.hpp so the overlay wrappers compile.
 #include <reshade.hpp>
+#include "logo_data.h"      // Embedded NightZoom_logo.png bytes (g_logo_png / g_logo_png_len)
 
 #include <Windows.h>
 #include <shellapi.h>       // ShellExecuteA (open Discord link)
@@ -46,9 +47,6 @@ static std::atomic<bool> g_limit_enabled{ false };
 
 using clock_type = std::chrono::high_resolution_clock;
 static clock_type::time_point g_last_present = clock_type::now();
-
-// This addon's own module handle (used to locate NightZoom_logo.png next to the DLL).
-static HMODULE g_module = nullptr;
 
 // Logo texture. Created in init_effect_runtime, freed in destroy_effect_runtime.
 // All zero -> no logo loaded; draw_logo() falls back to the bordered placeholder.
@@ -103,24 +101,13 @@ static void on_present(reshade::api::command_queue *, reshade::api::swapchain *,
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// Logo loading (one clearly-commented unit, trivial to swap for a real texture)
+// Logo loading (one clearly-commented unit)
 // ---------------------------------------------------------------------------
 
-// Full path to "NightZoom_logo.png" sitting next to this DLL.
-static std::wstring logo_file_path()
-{
-	wchar_t path[MAX_PATH] = {};
-	const DWORD len = GetModuleFileNameW(g_module, path, MAX_PATH);
-	std::wstring dir(path, len);
-	const size_t slash = dir.find_last_of(L"\\/");
-	if (slash != std::wstring::npos)
-		dir.resize(slash + 1);
-	return dir + L"NightZoom_logo.png";
-}
-
-// Decode a PNG to tightly-packed 32-bit RGBA using WIC (a Windows system component).
-// Returns false if the file is missing or cannot be decoded.
-static bool decode_png_rgba(const std::wstring &path, std::vector<uint8_t> &pixels, uint32_t &width, uint32_t &height)
+// Decode the embedded PNG (g_logo_png) to tightly-packed 32-bit RGBA using WIC
+// (a Windows system component). The image is baked into the DLL, so there is no
+// external file to ship or expose. Returns false if decoding fails.
+static bool decode_png_rgba(std::vector<uint8_t> &pixels, uint32_t &width, uint32_t &height)
 {
 	using Microsoft::WRL::ComPtr;
 
@@ -131,12 +118,15 @@ static bool decode_png_rgba(const std::wstring &path, std::vector<uint8_t> &pixe
 	bool ok = false;
 	{
 		ComPtr<IWICImagingFactory> factory;
+		ComPtr<IWICStream> stream;
 		ComPtr<IWICBitmapDecoder> decoder;
 		ComPtr<IWICBitmapFrameDecode> frame;
 		ComPtr<IWICFormatConverter> converter;
 
 		if (SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory))) &&
-		    SUCCEEDED(factory->CreateDecoderFromFilename(path.c_str(), nullptr, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &decoder)) &&
+		    SUCCEEDED(factory->CreateStream(&stream)) &&
+		    SUCCEEDED(stream->InitializeFromMemory(const_cast<BYTE *>(g_logo_png), g_logo_png_len)) &&
+		    SUCCEEDED(factory->CreateDecoderFromStream(stream.Get(), nullptr, WICDecodeMetadataCacheOnLoad, &decoder)) &&
 		    SUCCEEDED(decoder->GetFrame(0, &frame)) &&
 		    SUCCEEDED(factory->CreateFormatConverter(&converter)) &&
 		    SUCCEEDED(converter->Initialize(frame.Get(), GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom)))
@@ -166,8 +156,8 @@ static void load_logo_texture(reshade::api::effect_runtime *runtime)
 {
 	std::vector<uint8_t> pixels;
 	uint32_t w = 0, h = 0;
-	if (!decode_png_rgba(logo_file_path(), pixels, w, h))
-		return; // No file / decode failed -> placeholder is drawn instead.
+	if (!decode_png_rgba(pixels, w, h))
+		return; // Decode failed -> placeholder is drawn instead.
 
 	reshade::api::device *device = runtime->get_device();
 
@@ -304,7 +294,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID)
 	switch (reason)
 	{
 	case DLL_PROCESS_ATTACH:
-		g_module = hModule;
 		if (!reshade::register_addon(hModule))
 			return FALSE;
 		timeBeginPeriod(1); // Tighten sleep granularity for the pacing loop.

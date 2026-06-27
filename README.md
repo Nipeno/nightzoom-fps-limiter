@@ -79,8 +79,17 @@ done
 
 ### Logo
 
-Drop a **`NightZoom_logo.png`** next to `NightZoom.addon64` (same folder). On load the addon
-decodes it (via Windows' built-in WIC), uploads it as a texture, and shows it at the top of the
-window scaled to 200px wide (aspect preserved). If the file is missing or fails to decode, a
-bordered `[ NightZoom logo ]` placeholder is shown instead — nothing breaks. Any reasonable PNG
-works; transparency is supported.
+The logo is **baked into the DLL** (`src/logo_data.h`, a 512x512 PNG embedded as a byte array),
+so there is no separate image file to ship or expose. On load the addon decodes it from memory
+(via Windows' built-in WIC), uploads it as a texture, and shows it at the top of the window scaled
+to 200px wide (aspect preserved). If decoding ever fails, a bordered `[ NightZoom logo ]`
+placeholder is drawn instead — nothing breaks.
+
+To change the logo, replace `src/logo_data.h`:
+
+```sh
+# Optimize first (resize to ~512px and compress), then regenerate the header:
+sips -z 512 512 your-logo.png --out /tmp/logo.png
+pngquant --quality=70-90 --strip --force --output /tmp/logo.png /tmp/logo.png
+{ echo '#pragma once'; echo; xxd -i -n g_logo_png /tmp/logo.png; } > src/logo_data.h
+```

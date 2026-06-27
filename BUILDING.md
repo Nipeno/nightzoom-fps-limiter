@@ -85,7 +85,44 @@ pngquant --quality=70-90 --strip --force --output /tmp/logo.png /tmp/logo.png   
 { echo '#pragma once'; echo; xxd -i -n g_logo_png /tmp/logo.png; } > src/logo_data.h
 ```
 
+## Release bundle (CI)
+
+Each build also assembles a drag-and-drop bundle for end users. The
+[`build.yml`](.github/workflows/build.yml) workflow, after compiling the addon:
+
+1. **Resolves the latest ReShade** — scrapes `https://reshade.me/` for
+   `ReShade_Setup_<version>_Addon.exe`. If scraping fails (site change / rate-limit), it falls
+   back to a pinned version (`6.7.3`) so the build never breaks.
+2. **Downloads + extracts** the add-on-enabled installer and pulls out `ReShade64.dll` via
+   `7z e ReShade_Setup.exe ReShade64.dll`, then copies it to **`dxgi.dll`** (the name FiveM loads
+   ReShade under from its `plugins` folder).
+3. **Zips** `dxgi.dll` + `NightZoom.addon64` + `packaging/INSTALL.txt` + the license notices into
+   `NightZoom-FiveM-Bundle_ReShade-<ver>.zip`.
+
+Every run uploads two artifacts: the bundle ZIP and the standalone `NightZoom.addon64`. When a
+`v*` **tag** is pushed, both are also attached to the matching GitHub Release
+(`softprops/action-gh-release`, needs `permissions: contents: write`).
+
+To cut a release:
+
+```sh
+git tag v1.1.0 && git push origin v1.1.0
+```
+
+> The bundle carries whatever ReShade was latest at release time. Because ReShade loads addons
+> with an API version ≤ its own, bundling a newer ReShade never breaks this addon (API 18).
+
+## Third-party licenses
+
+Vendored headers and the bundled binary keep their upstream notices under `third_party/`:
+
+- [`third_party/ReShade-LICENSE.txt`](third_party/ReShade-LICENSE.txt) — BSD 3-Clause, covers the
+  vendored `deps/reshade` headers **and** the bundled `dxgi.dll` (ReShade binary).
+- [`third_party/Dear-ImGui-LICENSE.txt`](third_party/Dear-ImGui-LICENSE.txt) — MIT, covers the
+  vendored `deps/imgui` headers.
+
 ## License
 
-GPLv3 — see [LICENSE](LICENSE). Any distributed fork or derivative must also be open-sourced
-under the GPL.
+NightZoom itself is GPLv3 — see [LICENSE](LICENSE). Any distributed fork or derivative must also
+be open-sourced under the GPL. (Bundling the BSD-licensed ReShade alongside it is "mere
+aggregation" and permitted.)

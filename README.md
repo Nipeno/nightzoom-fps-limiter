@@ -12,16 +12,33 @@ owner). On **other servers, use it at your own risk** — every server sets its 
 anticheats may flag add-ons that load into the game. If you're unsure about a server, ask its
 staff first, or just don't use it there.
 
-Also: you need the version of ReShade that supports add-ons (see step 1 below).
+Also: this needs the **add-on-enabled** build of ReShade. Graphics packs like NVE and QuantV
+already include it; if you don't have ReShade at all, use the all-in-one bundle in
+[Option B](#option-b--you-dont-have-reshade-yet-easiest-all-in-one) below.
 
-## How to install
+## How to install (FiveM)
 
-1. **Install ReShade with add-on support.** Download it from <https://reshade.me>, run the
-   installer, pick your game, and make sure **"add-on support"** is ticked during setup.
-2. **Download** `NightZoom.addon64` from the [**Releases page**](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest).
-3. **Drop the file into your game's folder** — the same folder where ReShade was installed
-   (it's next to a file like `dxgi.dll` or `d3d11.dll`).
-4. **Start the game.**
+Everything goes in your FiveM **plugins** folder. Open it with **Win+R** →
+paste `%localappdata%\FiveM\FiveM.app\plugins` → Enter.
+
+Pick the option that matches you. Both downloads are on the
+[**Releases page**](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest).
+
+### Option A — You already have ReShade (NVE, QuantV, other graphics pack)
+
+1. Download **`NightZoom.addon64`**.
+2. Drop it into the `plugins` folder.
+3. Start FiveM.
+
+### Option B — You don't have ReShade yet (easiest, all-in-one)
+
+1. Download **`NightZoom-FiveM-Bundle…zip`**.
+2. Extract everything into the `plugins` folder.
+3. Start FiveM.
+
+> The bundle includes `dxgi.dll`, which is just the official ReShade. If you already have
+> ReShade from a graphics pack, **delete the bundled `dxgi.dll`** (use Option A instead) — two
+> copies will conflict.
 
 ## How to use
 

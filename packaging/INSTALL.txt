@@ -1,0 +1,56 @@
+==========================================================
+  NightZoom FPS Limiter  -  Install Guide
+  Locks your game to a smooth 60 FPS.
+  Made by Nipeno  -  Discord: https://discord.gg/nightzoom
+==========================================================
+
+WHAT'S IN THIS ZIP
+------------------------------------------------------------
+  dxgi.dll            <- ReShade (official). The thing that
+                         loads add-ons. ONLY needed if you do
+                         NOT already have ReShade.
+  NightZoom.addon64   <- The 60 FPS limiter itself.
+  INSTALL.txt         <- This file.
+  ReShade-LICENSE.txt <- License for the bundled ReShade.
+  LICENSE.txt         <- License for NightZoom (GPLv3).
+
+
+WHERE THINGS GO  (FiveM)
+------------------------------------------------------------
+Everything goes in your FiveM "plugins" folder:
+
+  C:\Users\<YOU>\AppData\Local\FiveM\FiveM.app\plugins\
+
+Tip: press Win+R, paste this, press Enter:
+  %localappdata%\FiveM\FiveM.app\plugins
+
+
+PICK ONE OF THE TWO OPTIONS BELOW
+------------------------------------------------------------
+
+OPTION A - You ALREADY have ReShade
+(e.g. you run NVE, QuantV, or another graphics pack)
+  1. Copy ONLY  NightZoom.addon64  into the plugins folder.
+  2. DELETE the  dxgi.dll  from this zip - do NOT copy it.
+     (You already have a ReShade; two will conflict.)
+
+OPTION B - You do NOT have ReShade yet
+  1. Copy ALL files from this zip into the plugins folder.
+
+
+THEN
+------------------------------------------------------------
+  1. Start FiveM / join the server.
+  2. Press  Home  to open the ReShade menu.
+  3. Find the  "NightZoom FPS Limiter"  window.
+  4. Tick  "Limit to 60 FPS".  Done - your choice is saved.
+
+
+NOTE
+------------------------------------------------------------
+This add-on is made for the NightZoom server and is allowed
+there. On OTHER servers, use it at your own risk - every
+server sets its own rules. If unsure, ask the server staff.
+
+Source code (open source, GPLv3):
+  https://github.com/Nipeno/nightzoom-fps-limiter

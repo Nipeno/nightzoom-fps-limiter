@@ -3,12 +3,19 @@ name: Build
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
   workflow_dispatch:   # lets you trigger a build manually from the Actions tab
+
+permissions:
+  contents: write      # needed to attach assets to a Release on tag
 
 jobs:
   build:
     runs-on: windows-2022
+    defaults:
+      run:
+        shell: pwsh
     steps:
       - uses: actions/checkout@v4
 
@@ -18,8 +25,66 @@ jobs:
       - name: Build (Release)
         run: cmake --build build --config Release
 
-      - name: Upload addon
+      # --- Fetch the latest official ReShade (add-on build) -----------------
+      # Scrape the version off reshade.me; fall back to a known-good pin so the
+      # build never breaks if the site changes or rate-limits us.
+      - name: Resolve + download latest ReShade
+        run: |
+          $fallback = '6.7.3'
+          $ver = $fallback
+          try {
+            $html = (Invoke-WebRequest -Uri 'https://reshade.me/' -UseBasicParsing -UserAgent 'Mozilla/5.0').Content
+            $m = [regex]::Match($html, 'ReShade_Setup_([0-9.]+)_Addon\.exe')
+            if ($m.Success) { $ver = $m.Groups[1].Value }
+          } catch {
+            Write-Host "::warning::Could not scrape reshade.me ($($_.Exception.Message)); using pinned $fallback"
+          }
+          Write-Host "Using ReShade version: $ver"
+          "reshade_version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+          $url = "https://reshade.me/downloads/ReShade_Setup_${ver}_Addon.exe"
+          Write-Host "Downloading $url"
+          curl.exe -fL -A 'Mozilla/5.0' -o ReShade_Setup.exe $url
+
+          # Extract just the 64-bit ReShade DLL from the installer.
+          7z e ReShade_Setup.exe ReShade64.dll -y
+          if (-not (Test-Path ReShade64.dll) -or ((Get-Item ReShade64.dll).Length -lt 100000)) {
+            Write-Error "ReShade64.dll was not extracted correctly (download may have failed)."
+            exit 1
+          }
+          Copy-Item ReShade64.dll dxgi.dll -Force   # FiveM loads ReShade as dxgi.dll
+
+      # --- Assemble the drag-and-drop bundle --------------------------------
+      - name: Assemble bundle
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item build/Release/NightZoom.addon64 dist/
+          Copy-Item dxgi.dll                         dist/
+          Copy-Item packaging/INSTALL.txt            dist/
+          Copy-Item third_party/ReShade-LICENSE.txt  dist/
+          Copy-Item LICENSE                          dist/LICENSE.txt
+          $zip = "NightZoom-FiveM-Bundle_ReShade-$env:reshade_version.zip"
+          Compress-Archive -Path dist/* -DestinationPath $zip -Force
+          "bundle_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # --- Artifacts (available on every build) -----------------------------
+      - name: Upload bundle (zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: NightZoom-FiveM-Bundle
+          path: ${{ env.bundle_zip }}
+
+      - name: Upload standalone addon
         uses: actions/upload-artifact@v4
         with:
           name: NightZoom-addon64
           path: build/Release/NightZoom.addon64
+
+      # --- Release (only when a v* tag is pushed) ---------------------------
+      - name: Attach assets to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ env.bundle_zip }}
+            build/Release/NightZoom.addon64

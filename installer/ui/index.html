@@ -169,6 +169,11 @@
   .pathchip .meta{min-width:0;}
   .pathchip .meta .lbl{font-size:11px;color:var(--good);letter-spacing:.04em;}
   .pathchip .meta .pth{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pathchip .meta{flex:1;}
+  .chip-change{flex:0 0 auto;background:transparent;border:1px solid var(--line-strong);color:var(--muted);
+    font-family:var(--body);font-size:11px;letter-spacing:.03em;padding:5px 10px;border-radius:8px;cursor:pointer;
+    transition:border-color .15s,color .15s;}
+  .chip-change:hover{border-color:var(--cyan);color:var(--cyan);}
 
   /* buttons */
   .actions{display:flex;align-items:center;gap:12px;margin-top:18px;}
@@ -343,9 +348,10 @@
               <span class="lbl" id="welcome-path-lbl">FiveM found</span>
               <span class="pth" id="welcome-path">C:\Users\Nipeno\AppData\Local\FiveM\FiveM.app</span>
             </span>
+            <button class="chip-change" id="welcome-change" onclick="changePath()">Change…</button>
           </div>
           <div class="actions">
-            <button class="btn btn-primary btn-lg" id="install-btn" onclick="startInstall()">Install</button>
+            <button class="btn btn-primary btn-lg" id="install-btn" onclick="startInstall()">Confirm &amp; install</button>
           </div>
           <div class="links">
             <a href="#" onclick="return false">
@@ -570,6 +576,9 @@
     el.classList.add('sel');
   }
 
+  // Overridden by the Tauri controller; no-op when opened bare in a browser.
+  function changePath(){}
+
   applyState('welcome');
 
   /* ====================================================================== */
@@ -731,6 +740,8 @@
         else { showError('notfound'); }
       }catch(e){ /* dialog plugin may be absent; ignore */ }
     }
+    // "Change…" on the welcome chip lets the user correct an auto-detected path before installing.
+    window.changePath = browseForFiveM;
     async function runAsAdmin(){
       // relaunch elevated then close this instance (best-effort)
       try{ await invoke('relaunch_as_admin'); }catch(e){}

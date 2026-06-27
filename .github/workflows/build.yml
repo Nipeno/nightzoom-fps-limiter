@@ -5,6 +5,10 @@ on:
     branches: [ main ]
     tags: [ 'v*' ]
   pull_request:
+    # The addon doesn't depend on installer/** — skip the C++ build for installer-only PRs
+    # (installer.yml handles those). Mixed PRs still build both.
+    paths-ignore:
+      - 'installer/**'
   workflow_dispatch:   # lets you trigger a build manually from the Actions tab
 
 permissions:

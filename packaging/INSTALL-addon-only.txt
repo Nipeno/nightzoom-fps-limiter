@@ -74,6 +74,27 @@ text like:
   4. Save and start FiveM again.
 
 
+STILL NOT SHOWING UP? (old ReShade)
+------------------------------------------------------------
+If you did the above and the "NightZoom FPS Limiter" window
+still doesn't appear, your graphics pack's ReShade is probably
+too old to load it (check ReShade.log for "requested API
+version ... is not supported").
+
+Fix: get a newer ReShade.
+  1. Download the  NightZoom-ReShade-Bundle  zip from the
+     releases page.
+  2. Copy its  dxgi.dll  into your plugins folder, replacing
+     the existing one.
+  3. Start FiveM again.
+
+This is the latest official ReShade and still works fine with
+NVE / QuantV (newer ReShade runs older add-ons), it just also
+supports NightZoom.
+
+Releases: https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest
+
+
 HOW TO UNINSTALL
 ------------------------------------------------------------
   1. Close FiveM.

@@ -64,15 +64,29 @@ if (-not $ini) {
     exit 1
 }
 
-# 3. Write the key with the same Win32 API FiveM reads it with. Creates the file /
-#    section if missing and leaves every other setting untouched.
+# 3. Read the current value, and only write if it isn't already correct.
+#    Same Win32 API FiveM uses; Write creates the file/section if missing and
+#    leaves every other setting untouched.
 Add-Type -Namespace NZ -Name Ini -MemberDefinition @'
 [System.Runtime.InteropServices.DllImport("kernel32", CharSet=System.Runtime.InteropServices.CharSet.Unicode)]
 public static extern bool WritePrivateProfileString(string section, string key, string val, string filePath);
+[System.Runtime.InteropServices.DllImport("kernel32", CharSet=System.Runtime.InteropServices.CharSet.Unicode)]
+public static extern int GetPrivateProfileString(string section, string key, string def, System.Text.StringBuilder ret, int size, string filePath);
 '@
-$ok = [NZ.Ini]::WritePrivateProfileString('Addons', 'ReShade5', $value, $ini)
+
+$sb = New-Object System.Text.StringBuilder 512
+[void][NZ.Ini]::GetPrivateProfileString('Addons', 'ReShade5', '', $sb, 512, $ini)
+$current = $sb.ToString()
 
 Write-Host ''
+if ($current -eq $value) {
+    Write-Host ("  Already enabled for this PC - nothing to do.") -ForegroundColor Green
+    Write-Host ("  File: {0}" -f $ini)
+    Write-Host '  Just start FiveM and press Home (or Insert with NVE) to open the menu.'
+    exit 0
+}
+
+$ok = [NZ.Ini]::WritePrivateProfileString('Addons', 'ReShade5', $value, $ini)
 if ($ok) {
     Write-Host ("  Done! Updated: {0}" -f $ini) -ForegroundColor Green
     Write-Host '  ReShade is now allowed. Start FiveM, press Home (or Insert with'

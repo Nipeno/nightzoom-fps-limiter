@@ -96,6 +96,16 @@ add the following section to <path>\CitizenFX.ini:
 If you already use ReShade with FiveM (e.g. via NVE / QuantV), you've probably done this already
 and can skip it.
 
+## NightZoom window doesn't show up?
+
+If you enabled ReShade but the **NightZoom FPS Limiter** window still isn't there, your existing
+ReShade is probably **too old** to load it (your `ReShade.log` will say something like
+`requested API version … is not supported`). This happens with some older graphics-pack bundles.
+
+**Fix:** download the **`NightZoom-ReShade-Bundle…zip`** and copy its **`dxgi.dll`** into your
+`plugins` folder, replacing the old one. It's the latest official ReShade — it still runs NVE /
+QuantV fine (newer ReShade loads older add-ons), it just also supports NightZoom.
+
 ## How to uninstall
 
 1. Close FiveM.

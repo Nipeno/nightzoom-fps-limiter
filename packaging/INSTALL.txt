@@ -70,6 +70,9 @@ HOW TO USE
   - In the menu, find the  "NightZoom FPS Limiter"  window.
     If you don't see it, look at the top tabs - make sure
     you're on the "Home" / add-ons view, not "Settings".
+    Still missing? If you chose Option A and kept an OLD ReShade
+    from a graphics pack, it may be too old to load NightZoom -
+    use the  dxgi.dll  from this zip instead (Option B).
 
   - Tick   "Limit to 60 FPS"   -> your game is now capped at 60.
     Untick it                  -> the cap is removed instantly.

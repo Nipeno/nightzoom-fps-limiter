@@ -1,0 +1,10 @@
+/build/
+*.addon64
+*.dll
+*.exp
+*.lib
+*.pdb
+*.user
+.vs/
+CMakeCache.txt
+CMakeFiles/

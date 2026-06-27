@@ -7,10 +7,10 @@ one button — turn it on to cap, turn it off to unlock.
 
 ## ⚠️ Please read first
 
-This add-on works by loading into your game. That's fine for **single-player** games. But in
-**online games with anticheat** (like GTA Online / FiveM), loading add-ons like this **can get
-you banned** — so don't use it there. If you only want a 60 FPS cap online, use **RivaTuner
-(RTSS)** or your graphics driver's frame-rate limit instead.
+This add-on is made for the **NightZoom** server and is allowed there (cleared with the server
+owner). On **other servers, use it at your own risk** — every server sets its own rules, and some
+anticheats may flag add-ons that load into the game. If you're unsure about a server, ask its
+staff first, or just don't use it there.
 
 Also: you need the version of ReShade that supports add-ons (see step 1 below).
 

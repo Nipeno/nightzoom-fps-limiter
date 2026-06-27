@@ -58,9 +58,9 @@ FiveM blocks modern ReShade by default, so you allow it once. **Two ways:**
 
 ### Easy (recommended) — run the included `.bat`
 
-After the files are in your `plugins` folder, double-click **`Enable-ReShade.bat`** (it's in the
-zip). It figures out the right per-PC value and writes it to `CitizenFX.ini` automatically — then
-start FiveM.
+After you've copied the files into your `plugins` folder, double-click **`Enable-ReShade.bat`**
+**from that folder** (not from inside the zip — extract first). It figures out the right per-PC
+value and writes it to `CitizenFX.ini` automatically — then start FiveM.
 
 > If Windows shows a blue **"Windows protected your PC"** box, click **More info → Run anyway**.
 > The script is open source ([`packaging/Enable-ReShade.bat`](packaging/Enable-ReShade.bat)) — read

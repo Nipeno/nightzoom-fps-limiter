@@ -14,7 +14,8 @@
 // How it works:
 //  - reshade::addon_event::present fires once per frame. We measure the time since
 //    the previous present and, when the limiter is enabled, block until exactly one
-//    60 FPS frame interval has elapsed using a hybrid sleep + busy-wait.
+//    60 FPS frame interval has elapsed using a high-resolution waitable timer for the
+//    bulk of the wait plus a short busy-wait for sub-millisecond accuracy.
 //  - The overlay callback draws a dedicated "NightZoom FPS Limiter" window.
 //  - The checkbox state is persisted via ReShade's own config (no custom file).
 
@@ -41,6 +42,15 @@
 static constexpr double kTargetFps = 60.0;
 static constexpr std::chrono::duration<double> kFrameInterval{ 1.0 / kTargetFps };
 
+// Last slice we busy-wait instead of sleeping, for sub-millisecond frame accuracy.
+// The coarse wait (high-res timer or sleep) lands within ~0.5 ms; the spin nails it.
+static constexpr std::chrono::microseconds kSpinMargin{ 500 };
+
+// Some older SDK headers lack this flag; define it so the build never depends on it.
+#ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
+#define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
+#endif
+
 static constexpr const char *kConfigSection = "NZ-FPS-Limiter";
 static constexpr const char *kConfigKey     = "LimitTo60";
 
@@ -57,6 +67,10 @@ static std::atomic<bool> g_limit_enabled{ false };
 using clock_type = std::chrono::high_resolution_clock;
 static clock_type::time_point g_last_present = clock_type::now();
 
+// High-resolution waitable timer for the coarse wait. Null -> sleep_for fallback
+// (older OS or unsupported flag); timeBeginPeriod(1) keeps that path tight.
+static HANDLE g_timer = nullptr;
+
 // Logo texture. Created in init_effect_runtime, freed in destroy_effect_runtime.
 // All zero -> no logo loaded; draw_logo() falls back to the bordered placeholder.
 static reshade::api::device       *g_logo_device = nullptr;
@@ -69,8 +83,9 @@ static uint32_t g_logo_height = 0;
 // Frame pacing
 // ---------------------------------------------------------------------------
 
-// Hybrid sleep + busy-wait. A plain Sleep() stutters because of Windows timer
-// granularity, so we sleep until ~1 ms before the target and spin the remainder.
+// Hybrid wait + busy-wait. A plain Sleep() stutters because of Windows timer
+// granularity, so we wait until ~0.5 ms before the target with a high-resolution
+// waitable timer (cheap, no CPU burn) and spin only the final slice.
 static void on_present(reshade::api::command_queue *, reshade::api::swapchain *,
                        const reshade::api::rect *, const reshade::api::rect *,
                        uint32_t, const reshade::api::rect *)
@@ -82,27 +97,45 @@ static void on_present(reshade::api::command_queue *, reshade::api::swapchain *,
 		return;
 	}
 
-	const clock_type::time_point target = g_last_present + std::chrono::duration_cast<clock_type::duration>(kFrameInterval);
+	const clock_type::time_point target     = g_last_present + std::chrono::duration_cast<clock_type::duration>(kFrameInterval);
+	const clock_type::time_point spin_start  = target - std::chrono::duration_cast<clock_type::duration>(kSpinMargin);
 
-	// Coarse phase: sleep until ~1 ms before the target (timeBeginPeriod(1) keeps this tight).
+	// Coarse phase: block until ~0.5 ms before the target without burning a core.
 	for (;;)
 	{
 		const clock_type::time_point now = clock_type::now();
-		if (now >= target)
+		if (now >= spin_start)
 			break;
 
-		const auto remaining = target - now;
-		if (remaining > std::chrono::milliseconds(1))
-			std::this_thread::sleep_for(remaining - std::chrono::milliseconds(1));
+		const auto remaining = spin_start - now;
+		if (g_timer != nullptr)
+		{
+			// Negative due time = relative, in 100 ns units. One wait is enough;
+			// the loop just re-checks the clock in case of an early wake.
+			LARGE_INTEGER due;
+			due.QuadPart = -(std::chrono::duration_cast<std::chrono::nanoseconds>(remaining).count() / 100);
+			if (due.QuadPart < 0 && SetWaitableTimerEx(g_timer, &due, 0, nullptr, nullptr, nullptr, 0))
+				WaitForSingleObject(g_timer, INFINITE);
+			else
+				break; // Sub-100 ns left, or the timer failed; spin handles it.
+		}
 		else
-			break; // Hand off to the spin phase for the last sub-millisecond.
+		{
+			std::this_thread::sleep_for(remaining); // Fallback: timeBeginPeriod(1) keeps this ~1 ms.
+		}
 	}
 
-	// Fine phase: busy-wait the remainder for frame-accurate pacing.
+	// Fine phase: busy-wait the last slice for frame-accurate pacing.
 	while (clock_type::now() < target)
 		_mm_pause();
 
-	g_last_present = clock_type::now();
+	// Drift compensation: anchor the next frame to the ideal target so per-frame
+	// overshoot does not accumulate into a slow drift below 60 FPS. But if we fell
+	// more than a full frame behind (alt-tab, hitch, loading stall), drop the debt
+	// and re-anchor to now so we never burst-render to "catch up".
+	const clock_type::time_point now = clock_type::now();
+	const clock_type::time_point one_frame_late = target + std::chrono::duration_cast<clock_type::duration>(kFrameInterval);
+	g_last_present = (now > one_frame_late) ? now : target;
 }
 
 // ---------------------------------------------------------------------------
@@ -311,7 +344,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID)
 	case DLL_PROCESS_ATTACH:
 		if (!reshade::register_addon(hModule))
 			return FALSE;
-		timeBeginPeriod(1); // Tighten sleep granularity for the pacing loop.
+		timeBeginPeriod(1); // Tighten sleep granularity for the sleep_for fallback path.
+		// High-resolution waitable timer (Win10 1803+). Null on older OS -> sleep fallback.
+		g_timer = CreateWaitableTimerExW(nullptr, nullptr,
+			CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
 		reshade::register_event<reshade::addon_event::init_effect_runtime>(on_init_effect_runtime);
 		reshade::register_event<reshade::addon_event::destroy_effect_runtime>(on_destroy_effect_runtime);
 		reshade::register_event<reshade::addon_event::present>(on_present);
@@ -319,6 +355,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID)
 		break;
 	case DLL_PROCESS_DETACH:
 		reshade::unregister_addon(hModule);
+		if (g_timer != nullptr)
+			CloseHandle(g_timer);
 		timeEndPeriod(1);
 		break;
 	}

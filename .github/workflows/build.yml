@@ -96,6 +96,21 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          name: NightZoom FPS Limiter ${{ github.ref_name }}
+          body: |
+            Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
+
+            ## Which file do I download?
+
+            - **No ReShade yet? (easiest)** — get **`NightZoom-ReShade-Bundle_v…zip`**. It includes
+              ReShade. Extract everything into your FiveM `plugins` folder.
+            - **Already have ReShade** (NVE / QuantV / other graphics pack) — get
+              **`NightZoom-Addon-Only.zip`** and extract `NightZoom.addon64` into `plugins`.
+
+            Each zip has an `INSTALL.txt` with full steps (including the one-time FiveM
+            "ReShade was blocked" fix). The bundled ReShade is the latest official build (BSD).
+
+            💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).
           files: |
             ${{ env.bundle_zip }}
             ${{ env.addon_zip }}

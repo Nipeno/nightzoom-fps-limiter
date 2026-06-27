@@ -88,10 +88,8 @@ jobs:
             Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
 
             **How to install:** download and extract the zip, then open the included
-            **`INSTALL.html`** for the full step-by-step (drag the files from the
-            `Copy-these-into-plugins` folder into your FiveM `plugins` folder, plus the
-            one-time "ReShade was blocked" fix). The zip bundles ReShade, so it's all you
-            need (already have ReShade? `INSTALL.html` says what to skip).
+            **`INSTALL.html`** for the full step-by-step. The zip bundles ReShade, so it's
+            all you need (already have ReShade? `INSTALL.html` says what to skip).
 
             💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).
           files: ${{ env.bundle_zip }}

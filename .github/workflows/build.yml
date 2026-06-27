@@ -67,6 +67,17 @@ jobs:
           Compress-Archive -Path dist/* -DestinationPath $zip -Force
           "bundle_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+      # --- Assemble the add-on-only download (for people who have ReShade) ---
+      - name: Assemble addon-only zip
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-addon | Out-Null
+          Copy-Item build/Release/NightZoom.addon64       dist-addon/
+          Copy-Item packaging/INSTALL-addon-only.txt      dist-addon/INSTALL.txt
+          Copy-Item LICENSE                               dist-addon/LICENSE.txt
+          $zip = "NightZoom-Addon-Only.zip"
+          Compress-Archive -Path dist-addon/* -DestinationPath $zip -Force
+          "addon_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       # --- Artifacts (available on every build) -----------------------------
       - name: Upload bundle (zip)
         uses: actions/upload-artifact@v4
@@ -74,11 +85,11 @@ jobs:
           name: NightZoom-FiveM-Bundle
           path: ${{ env.bundle_zip }}
 
-      - name: Upload standalone addon
+      - name: Upload addon-only (zip)
         uses: actions/upload-artifact@v4
         with:
-          name: NightZoom-addon64
-          path: build/Release/NightZoom.addon64
+          name: NightZoom-Addon-Only
+          path: ${{ env.addon_zip }}
 
       # --- Release (only when a v* tag is pushed) ---------------------------
       - name: Attach assets to Release
@@ -87,4 +98,4 @@ jobs:
         with:
           files: |
             ${{ env.bundle_zip }}
-            build/Release/NightZoom.addon64
+            ${{ env.addon_zip }}

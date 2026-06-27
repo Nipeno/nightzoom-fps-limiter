@@ -1,0 +1,83 @@
+==========================================================
+  NightZoom FPS Limiter  -  Add-on Only
+  Locks your game to a smooth 60 FPS.
+  Made by Nipeno  -  Discord: https://discord.gg/nightzoom
+==========================================================
+
+This is the ADD-ON-ONLY download. Use this if you ALREADY have
+ReShade (for example from a graphics pack like NVE or QuantV).
+
+If you do NOT have ReShade yet, download the all-in-one
+"NightZoom-FiveM-Bundle" zip instead - it includes ReShade.
+
+
+WHY 60 FPS?
+------------------------------------------------------------
+GTA's physics is tied to your frame rate - higher FPS can
+change how the car behaves. On a racing server that's unfair:
+people on stronger PCs would get an edge. Capping everyone to
+60 FPS keeps the physics consistent so nobody has an advantage.
+
+
+INSTALL  (FiveM)
+------------------------------------------------------------
+  1. Open your FiveM plugins folder. Press Win+R, paste this,
+     press Enter:
+       %localappdata%\FiveM\FiveM.app\plugins
+  2. Copy  NightZoom.addon64  into that folder.
+  3. Start FiveM.
+
+  (Do NOT add a dxgi.dll - you already have ReShade.)
+
+
+HOW TO USE
+------------------------------------------------------------
+  - Press  Home  to open or close the ReShade menu in-game.
+    (Home is the default key - you can change it in ReShade's
+     Settings. The first time, ReShade shows a welcome /
+     tutorial pop-up - click "Continue" or "Skip Tutorial".)
+  - Find the  "NightZoom FPS Limiter"  window.
+  - Tick   "Limit to 60 FPS"   -> capped at 60.
+    Untick it                  -> cap removed instantly.
+  - Your choice is saved and stays set next launch.
+
+
+IF FIVEM BLOCKS RESHADE (first launch only)
+------------------------------------------------------------
+FiveM blocks modern ReShade by default. If the add-on doesn't
+show up and you see red console text like:
+
+  Blocked load of ReShade version 5 or higher ...
+  add the following section to <path>\CitizenFX.ini:
+     [Addons]
+     ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug...
+
+Fix it once:
+  1. Fully close FiveM.
+  2. Open  CitizenFX.ini  (in your FiveM.app folder - the
+     console message shows the exact full path).
+  3. Add the two lines EXACTLY as YOUR console showed them.
+     The ID (xxxxxxxx) is UNIQUE to your PC - copy it from your
+     own console, not from this example.
+  4. Save and start FiveM again.
+
+(If you already use ReShade with FiveM, you've likely done
+ this already and can skip it.)
+
+
+HOW TO UNINSTALL
+------------------------------------------------------------
+  1. Close FiveM.
+  2. Open  %localappdata%\FiveM\FiveM.app\plugins
+  3. Delete  NightZoom.addon64.
+     (Leave any dxgi.dll / graphics-pack files alone.)
+
+
+NOTE
+------------------------------------------------------------
+This add-on is made for the NightZoom server. On OTHER servers,
+use it at your own risk - every server sets its own rules.
+If unsure, ask the server staff.
+
+Source code (open source, GPLv3):
+  https://github.com/Nipeno/nightzoom-fps-limiter

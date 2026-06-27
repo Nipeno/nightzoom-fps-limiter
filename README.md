@@ -25,8 +25,9 @@ Pick the option that matches you. Both downloads are on the
 
 ### Option A — You already have ReShade (NVE, QuantV, other graphics pack)
 
-1. Download **`NightZoom.addon64`**.
-2. Drop it into the `plugins` folder.
+1. Download **`NightZoom-Addon-Only.zip`**.
+2. Extract **`NightZoom.addon64`** into the `plugins` folder (the included `INSTALL.txt` has the
+   full steps).
 3. Start FiveM.
 
 ### Option B — You don't have ReShade yet (easiest, all-in-one)

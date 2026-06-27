@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NightZoom FPS Limiter - Install Guide</title>
+<style>
+  :root{
+    --bg:#0b0f17; --panel:#121826; --panel2:#0e1320; --line:#243047;
+    --text:#e7ecf5; --muted:#9fb0cc; --accent:#5cc6ff; --accent2:#7c5cff;
+    --good:#46d39a; --warn:#ffcf5c; --danger:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; min-height:100vh; position:relative; isolation:isolate;
+    color:var(--text); line-height:1.6;
+    background-color:var(--bg);
+    background-image:
+      radial-gradient(900px 520px at 12% -8%, rgba(92,198,255,.18), transparent 60%),
+      radial-gradient(820px 560px at 100% -4%, rgba(124,92,255,.16), transparent 55%),
+      radial-gradient(1100px 760px at 50% 116%, rgba(124,92,255,.12), transparent 60%),
+      linear-gradient(180deg, #0e1524 0%, #0b0f17 42%, #080b12 100%);
+    background-attachment:fixed;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* faint grid that fades toward the edges */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(140,170,220,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(140,170,220,.05) 1px, transparent 1px);
+    background-size:46px 46px;
+    -webkit-mask-image:radial-gradient(120% 90% at 50% 0%, #000 35%, transparent 78%);
+            mask-image:radial-gradient(120% 90% at 50% 0%, #000 35%, transparent 78%);
+  }
+  /* drifting colored glows: parallax on scroll (--sy), fade in/out on progress (--p) */
+  .orbs{
+    position:fixed; inset:0; z-index:-2; overflow:hidden; pointer-events:none;
+    filter:blur(72px) saturate(115%) hue-rotate(calc(var(--p,0) * 45deg));
+  }
+  .orb{
+    position:absolute; width:62vw; height:62vw; max-width:780px; max-height:780px;
+    border-radius:50%; will-change:transform,opacity;
+  }
+  .orb.a{top:-14vh; left:-8vw;  background:radial-gradient(circle,rgba(92,198,255,.26),transparent 66%);
+    transform:translateY(calc(var(--sy,0) * -0.06px)); opacity:calc(1 - var(--p,0) * 0.7)}
+  .orb.b{top:-10vh; right:-10vw;background:radial-gradient(circle,rgba(124,92,255,.24),transparent 66%);
+    transform:translateY(calc(var(--sy,0) *  0.05px)); opacity:calc(0.9 - var(--p,0) * 0.35)}
+  .orb.c{top:52vh;  left:26vw;  background:radial-gradient(circle,rgba(70,211,154,.2),transparent 66%);
+    transform:translateY(calc(var(--sy,0) * -0.11px)); opacity:calc(var(--p,0) * 0.95)}
+  .orb.d{bottom:-18vh; right:8vw;background:radial-gradient(circle,rgba(124,92,255,.24),transparent 66%);
+    transform:translateY(calc(var(--sy,0) *  0.09px)); opacity:var(--p,0)}
+  @media (prefers-reduced-motion: reduce){ .orb{transform:none !important} }
+  .wrap{position:relative; max-width:760px; margin:0 auto; padding:48px 22px 80px}
+  header{text-align:center; margin-bottom:36px}
+  header img{width:104px; height:104px; filter:drop-shadow(0 4px 22px rgba(92,198,255,.35))}
+  h1{font-size:1.9rem; margin:.5em 0 .15em; letter-spacing:.2px}
+  .tag{color:var(--muted); font-size:1.02rem; margin:0}
+  .by{color:var(--muted); font-size:.92rem; margin-top:14px}
+  .by a{color:inherit; text-decoration:none; border-bottom:1px dotted var(--muted); transition:.15s}
+  .by a:hover{color:var(--text); border-bottom-color:var(--text)}
+  .btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px}
+  .btn{
+    display:inline-block; padding:9px 16px; border-radius:9px; text-decoration:none;
+    font-weight:600; font-size:.92rem; border:1px solid var(--line); color:var(--text);
+    background:var(--panel); transition:.15s;
+  }
+  .btn:hover{border-color:var(--accent); color:#fff; transform:translateY(-1px)}
+  .btn.primary{background:linear-gradient(180deg,#2b3b5e,#1d2740); border-color:#3a5180}
+  h2{font-size:1.25rem; margin:42px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--line)}
+  p{margin:.6em 0}
+  a{color:var(--accent)}
+  code,kbd{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.9em;
+    background:#1b2335; border:1px solid var(--line); border-radius:5px; padding:1px 6px;
+  }
+  kbd{box-shadow:0 1px 0 #000; font-weight:600}
+  pre{
+    background:var(--panel2); border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:8px; padding:12px 14px; overflow-x:auto; font-size:.88rem;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:#cdd9ef;
+  }
+  ol.steps{list-style:none; counter-reset:s; padding:0; margin:0}
+  ol.steps>li{
+    counter-increment:s; position:relative; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; padding:18px 20px 18px 64px; margin:14px 0;
+  }
+  ol.steps>li::before{
+    content:counter(s); position:absolute; left:16px; top:16px; width:34px; height:34px;
+    display:grid; place-items:center; border-radius:50%; font-weight:700;
+    background:linear-gradient(180deg,var(--accent),var(--accent2)); color:#06101e;
+  }
+  ol.steps>li b{color:#fff}
+  .lead{font-weight:600; font-size:1.05rem; margin:0 0 4px}
+  .note{color:var(--muted); font-size:.92rem}
+  .callout{border:1px solid var(--line); border-radius:12px; padding:14px 18px; margin:16px 0; background:var(--panel2)}
+  .callout.good{border-color:#1f6b50; background:#0f1d18}
+  .callout.warn{border-color:#6b5a1f; background:#1c1810}
+  .callout .ttl{font-weight:700; margin:0 0 4px}
+  .callout.good .ttl{color:var(--good)} .callout.warn .ttl{color:var(--warn)}
+  ul{padding-left:1.25em} li{margin:.25em 0}
+  footer{margin-top:48px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:.88rem; text-align:center}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="orbs" aria-hidden="true"><span class="orb a"></span><span class="orb b"></span><span class="orb c"></span><span class="orb d"></span></div>
+<div class="wrap">
+
+  <header>
+    <img alt="NightZoom logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAqUExURUdwTP///////////////////////////////////////////////////4sGkswAAAANdFJOUwA8WR159gzu28SpKpDt5ZxrAAAGi0lEQVR42u2cwUtcVxTGZ8aHZMZZjLa7IkyCqxjBNsVZuFFxFTqLEiQFGUhTqFO6q2BrIOAmYyMV3BRtcMBFoQk4YFomm1CQkI3CLCoONuL9X+ponXn33nPuvPGdcy+099sa3jn3vPPO/X33zUsi4eXl5eXl5eXl5eXl5eXl5eXl5fX/0KO80/B9t9ddJtD/4c/i74cOw/8mhDh2F/6FaGnRbXghdpy03p1NcaWc/fBf3u6EF++t1/73g3UR0pHd8F+NvCgJSRWri7/3VKjatxb+2zvq4ltq7llq+6EDffEtnVoq/apAdGQj+qbAVWGPvlUSJk1x3veu0YU4GWd74IcOV0V3nfEU/uORl09FJP3FsfR7W09EVG0QL/3VyMtV0YvypHU/3CyJ3kSFY/2TI4c91L2jY6KVXyt4S/NxG+7VyMFWSVxfO3GqPvRZjw0HKBdn8YM3B3tWUY5vHccSDfoe7G13UJrVuiUInOHYvyq7wbGOxlz3YM02jikacGgJLpS1iGNRepAPxyL24Kn1Hqyy45hZSV4c664MH45FU0HpwTg49uiWKulqfeG/tOdtkdASFDWXPY4W+6rS/et0OKZeS91XCtDAT9LhmHatc+1hBTrm6MGMme6kArWho05oCermBFIgdFDiWMPssdJQc6h9s0jag3ICdagHU4Q4lupy0tGAoCNNZwm0aykJSOzbho5hQhwbBhLYR9h3CumbWDhWMyeQhqBDtQRxcKzvidlmDkPQERDiWNDF59Yg6LhBaAnK5sMeiX03kL6JhWNj5gSy4HioEeJYFUpgBSxQe+CrliAOjg2UzGe+YxB0UFqCLHjWsQQWaJ7DEhTABBZBVthB+uaMvAfFfSOOqX0TC8eq5gO3AtSDlJYg2eXUGcSxLC+OhROAcazAi2Ph3Q3GsSIhjhXNCWRA6ODCsWU9gTq3JZBKPKtXFcSxDBOONT/REugHcazOhGOnKW22pcCBXyTEManEKW2Dj2QJyHCsktQSAHGM0hLIxDug3VcQx9JMOHYyHkKDywT6rOLYafiGvHdgCT4PP3SX473MbQkU4g2192UCII4FXDiWD8/4y/WCOJYmxLEFZU+typdNigg9SIZjZ9KKL54tu5ZgXr72HoZjlJZAI96avMOBOBZw4VhOfsJzGI6VCXFMKrGyzeUjWgIyHDvWE4BxjNISaCUek8YLjGMlJhzb1xMAcSzLhWN7yozZlwtUwSxBnBbQSywlwG8J9BL/Gb63II6pPRjHEgAHkPVwAiCOJdlwTL3BGzCOZQhx7Ia+p4Z2xw2pQCvslkAbsysBuyUAShwqSgXEMUpLAB1Ahhp/CcSxFCOOqQnUuHGsDLz1DPX4d6AlqDNZgjO9Kk0QOhqMOIYfWnagQ7UEpDiGntzbwLG8OYH7WA+S4dhDw/uzMHRQWgKQeFNdfqVX48Qx/Ni0PfD7WHEMT+CIowfTYIkHzO8OKC0BSLxajZUCjbHiGPoK0RaOQbutPPBVW7pP1YNT5gRYLME3yC9mqqYXaAVeHEMTsIVj0KiToaPKi2NYAmfYlIqDYwE2zxqG11eUlqCM7akNw2vsAjOOYW+Q8sjfyHEMSaA98NUZQY5j0LQ3sQK1JcASYLEEBXRPHcZxrM6NY0gCOeQBoccxaJlhHCO0BCmc6wqRe5D0hNaQwCK0f/LgGER9IegYZscx7dhGHvg1phfmFQMsm3qQ3hLACaCWgPaEFunPcIHKFnAMSmAKmdEsOAaAL4pjS1SWYMWcAIslCEx7aoBAR5YQxxZMe2qADPwFQhz7dLajGQ2XZyXlOHrwWrOL0BLEZzgXnzRlXH/SRGkJYjPcxW8tbPcgoSWIv3+6+KQpTYhjsRlOcP0vB1EZTsT/wrz3HiTEMZIezDnuQftf96pvCd609MfdKJqcbP3Lia/jPTeKJWjOYXrwfUdzc6L54Mdfdt/dGnxzN14C4AFyV33xbHfmowmSiRH0HPyH5+9GJ+haoNxT8JM10uDwsQ2+9O2Z1/QPQS1q9N2bExwPIfwNChCdC5OyETp+my26bgmAruO475F7cPnXD7gHcdWw+OfT/HycxO88/+KhE4OrDWFtxpI5AL+DOtketcaFRWe1hy3Bed+/fZ2wKBXHnk2PJ6xK7sG1aZeWoLk2aj18yBI0f3IRvt2D5+ETTpS6Kn7CkS4sgZN737EEj6fdhT/HsWWn4RP9b8cTXl5eXl5eXl5eXl5eXl5eXl5eXv8h/QOoKvavCHl4HgAAAABJRU5ErkJggg==">
+    <h1>NightZoom FPS Limiter</h1>
+    <p class="tag">Locks your game to a smooth <b>60&nbsp;FPS</b>.</p>
+    <p class="by">Made by <a href="https://nipeno.dev" target="_blank" rel="noopener"><b>Nipeno</b></a></p>
+    <div class="btns">
+      <a class="btn primary" href="https://discord.gg/nightzoom" target="_blank" rel="noopener">Join NightZoom</a>
+      <a class="btn" href="https://github.com/Nipeno/nightzoom-fps-limiter" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest" target="_blank" rel="noopener">Latest release</a>
+    </div>
+  </header>
+
+  <h2>How to install</h2>
+  <ol class="steps">
+    <li>
+      <p class="lead">Open your FiveM <b>plugins</b> folder.</p>
+      Press <kbd>Win</kbd>+<kbd>R</kbd>, paste this, press Enter:
+      <pre>%localappdata%\FiveM\FiveM.app\plugins</pre>
+      A folder window opens - leave it open.
+      <p class="note">Nothing opened / error? Then FiveM isn't in the default spot. Open <b>your</b> FiveM
+      install folder instead (the one with <code>FiveM.exe</code>) and go into <code>FiveM.app\plugins</code> inside it.</p>
+    </li>
+    <li>
+      <p class="lead">Drag the add-on files <b>into</b> that folder.</p>
+      In the zip, open the <b>Copy-these-into-plugins</b> folder. Drag its three files -
+      <code>dxgi.dll</code>, <code>NZ-FPS-Limiter.addon64</code>, <code>Enable-ReShade.bat</code> - into the plugins folder.
+      <div class="callout warn" style="margin-top:12px">
+        <p class="ttl">Already have ReShade? <span class="note" style="font-weight:400">(NVE, QuantV, other graphics pack)</span></p>
+        Don't drag <code>dxgi.dll</code> - that <b>is</b> ReShade, and you already have it (two copies conflict).
+        Just drag the other two files.
+      </div>
+      <p class="note">Drag the <b>files</b> themselves, not the folder - the plugins folder should show
+      <code>dxgi.dll</code> directly, not a sub-folder.</p>
+    </li>
+    <li>
+      <p class="lead">Allow ReShade in FiveM <span class="note">(one time)</span>.</p>
+      In the plugins folder you just filled, double-click <b>Enable-ReShade.bat</b>. It sets everything up by itself - press a key to close it.
+      <ul>
+        <li>Blue <b>"Windows protected your PC"</b> box? Click <b>More info → Run anyway</b>. (It's open source - open it in Notepad first if you like.)</li>
+        <li>Says it couldn't find FiveM? See <a href="#manual">If the .bat can't find FiveM</a> below.</li>
+      </ul>
+    </li>
+    <li>
+      <p class="lead">Start FiveM and join the server.</p>
+    </li>
+    <li>
+      <p class="lead">Turn the limiter ON.</p>
+      Press <kbd>Home</kbd> to open the ReShade menu. <span class="note">(Some setups use <kbd>Insert</kbd> instead - if Home does nothing, try Insert.)</span>
+      First time, ReShade shows a tutorial pop-up: click <b>Continue</b> or <b>Skip Tutorial</b>.
+      Find the <b>"NightZoom FPS Limiter"</b> window and tick <b>Limit to 60 FPS</b>.
+      <div class="callout good" style="margin-top:14px"><p class="ttl">✓ Done - your choice is saved for next time.</p></div>
+    </li>
+  </ol>
+
+  <h2>Why 60 FPS?</h2>
+  <p>GTA's physics is tied to your frame rate - higher FPS can change how a car behaves. On a racing
+  server that's unfair: people on stronger PCs would get an edge. Capping everyone to 60 FPS keeps the
+  physics consistent so nobody has an advantage.</p>
+
+  <h2>Already have ReShade but don't see the window? <span class="note" style="font-weight:400">(it's too old)</span></h2>
+  <p>If you used your graphics pack's ReShade but the <b>"NightZoom FPS Limiter"</b> window never shows
+  up, that ReShade is probably too old to load it (check <code>ReShade.log</code> for
+  <code>requested API version … is not supported</code>).</p>
+  <p><b>Fix:</b> drag the zip's <code>dxgi.dll</code> (from the <b>Copy-these-into-plugins</b> folder) into
+  your plugins folder, replacing the old one, then start FiveM again. It's the latest official ReShade and
+  still runs NVE / QuantV fine - it just also supports NightZoom FPS Limiter.</p>
+
+  <h2 id="manual">If the .bat can't find FiveM <span class="note" style="font-weight:400">(manual allow)</span></h2>
+  <p>Only needed if <code>Enable-ReShade.bat</code> couldn't locate FiveM. The first time you launch with
+  ReShade, FiveM's console shows red text like:</p>
+  <pre>Blocked load of ReShade version 5 or higher ...
+add the following section to &lt;path&gt;\CitizenFX.ini:
+   [Addons]
+   ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug...</pre>
+  <ol>
+    <li>Fully close FiveM.</li>
+    <li>Open the file it named - <code>CitizenFX.ini</code>, in your <code>FiveM.app</code> folder (the console shows the exact path).</li>
+    <li>Add the two lines <b>exactly as your own console showed them</b>:
+      <pre>[Addons]
+ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to game crashes</pre>
+      <span class="note">The ID (<code>xxxxxxxx</code>) is <b>unique to your PC</b> - copy it from your own console, not this example.</span>
+    </li>
+    <li>Save and start FiveM again.</li>
+  </ol>
+
+  <h2>How to use</h2>
+  <ul>
+    <li>Press <kbd>Home</kbd> (or <kbd>Insert</kbd>) to open/close the ReShade menu.</li>
+    <li>In the <b>"NightZoom FPS Limiter"</b> window: tick <b>Limit to 60 FPS</b> to cap, untick to unlock instantly.</li>
+    <li>Your choice is saved and stays set next launch.</li>
+  </ul>
+
+  <h2>How to uninstall</h2>
+  <ol>
+    <li>Close FiveM.</li>
+    <li>Open <code>%localappdata%\FiveM\FiveM.app\plugins</code>.</li>
+    <li>Delete <b>NZ-FPS-Limiter.addon64</b>.</li>
+    <li>Only if you installed ReShade <b>just</b> for this and want it gone too, also delete
+    <code>dxgi.dll</code>. If a graphics pack (NVE / QuantV) put ReShade there, <b>leave it alone</b>.</li>
+  </ol>
+
+  <footer>
+    <p>This add-on is made for the <b>NightZoom</b> server. On other servers, use it at your own risk -
+    every server sets its own rules. If unsure, ask the server staff.</p>
+    <p>Open source (GPLv3) · <a href="https://github.com/Nipeno/nightzoom-fps-limiter" target="_blank" rel="noopener">github.com/Nipeno/nightzoom-fps-limiter</a></p>
+  </footer>
+
+</div>
+<script>
+(function(){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var b = document.body, ticking = false;
+  function update(){
+    var sy = window.scrollY || window.pageYOffset || 0;
+    var max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    b.style.setProperty('--sy', sy);
+    b.style.setProperty('--p', Math.min(1, sy / max).toFixed(4));
+    ticking = false;
+  }
+  function onScroll(){ if (!ticking){ ticking = true; requestAnimationFrame(update); } }
+  addEventListener('scroll', onScroll, {passive:true});
+  addEventListener('resize', onScroll, {passive:true});
+  update();
+})();
+</script>
+</body>
+</html>

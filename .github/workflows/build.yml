@@ -58,10 +58,13 @@ jobs:
       - name: Assemble bundle
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item build/Release/NZ-FPS-Limiter.addon64 dist/
-          Copy-Item dxgi.dll                         dist/
-          Copy-Item packaging/Enable-ReShade.bat     dist/
-          Copy-Item packaging/INSTALL.txt            dist/
+          New-Item -ItemType Directory -Force -Path 'dist/Copy-these-into-plugins' | Out-Null
+          # Files the user drags into their FiveM plugins folder.
+          Copy-Item build/Release/NZ-FPS-Limiter.addon64 'dist/Copy-these-into-plugins/'
+          Copy-Item dxgi.dll                             'dist/Copy-these-into-plugins/'
+          Copy-Item packaging/Enable-ReShade.bat         'dist/Copy-these-into-plugins/'
+          # Guide + licenses stay at the zip root.
+          Copy-Item packaging/INSTALL.html           dist/
           Copy-Item third_party/ReShade-LICENSE.txt  dist/
           Copy-Item LICENSE                          dist/LICENSE.txt
           $zip = "NZ-FPS-Limiter_v$env:reshade_version.zip"
@@ -84,11 +87,11 @@ jobs:
           body: |
             Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
 
-            **How to install:** download the zip below, extract everything into your FiveM
-            `plugins` folder, and follow the included **`INSTALL.txt`** — it has the full
-            step-by-step, including the one-time FiveM "ReShade was blocked" fix. The zip
-            bundles ReShade, so it's all you need (already have ReShade? `INSTALL.txt` says
-            what to skip).
+            **How to install:** download and extract the zip, then open the included
+            **`INSTALL.html`** for the full step-by-step (drag the files from the
+            `Copy-these-into-plugins` folder into your FiveM `plugins` folder, plus the
+            one-time "ReShade was blocked" fix). The zip bundles ReShade, so it's all you
+            need (already have ReShade? `INSTALL.html` says what to skip).
 
             💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).
           files: ${{ env.bundle_zip }}

@@ -47,6 +47,35 @@ Pick the option that matches you. Both downloads are on the
 
 Your choice is remembered — it stays the same next time you launch the game.
 
+## First launch: "ReShade was blocked" (one-time fix)
+
+FiveM blocks modern ReShade by default. The **first** time, you may see red text in the FiveM
+console like:
+
+```
+Blocked load of ReShade version 5 or higher ...
+If you want to force it to load anyway, add the following section to <path>\CitizenFX.ini:
+   [Addons]
+   ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to game crashes
+```
+
+To allow it (you only do this once):
+
+1. Fully close FiveM.
+2. Open **`CitizenFX.ini`** — it's in your `FiveM.app` folder, and the console message shows you
+   the exact full path.
+3. Add the two lines **exactly as your own console showed them**:
+   ```ini
+   [Addons]
+   ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to game crashes
+   ```
+   > ⚠️ The ID (`xxxxxxxx`) is **unique to your PC** — copy the line straight from your own FiveM
+   > console, don't use the example above.
+4. Save and start FiveM again.
+
+If you already use ReShade with FiveM (e.g. via NVE / QuantV), you've probably done this already
+and can skip it.
+
 ## Is it safe? What does it do?
 
 This add-on is **open source**, so anyone can read exactly what it does. It only:

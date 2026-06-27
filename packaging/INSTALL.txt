@@ -46,6 +46,36 @@ THEN
   4. Tick  "Limit to 60 FPS".  Done - your choice is saved.
 
 
+IMPORTANT: FIRST LAUNCH - "ReShade was blocked"
+------------------------------------------------------------
+FiveM blocks modern ReShade by default. The FIRST time, you may
+see red text in the FiveM console like:
+
+  Blocked load of ReShade version 5 or higher ...
+  If you want to force it to load anyway, add the following
+  section to <path>\CitizenFX.ini:
+     [Addons]
+     ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug...
+
+To allow ReShade (one-time fix):
+  1. Fully close FiveM.
+  2. Open the file it named:  CitizenFX.ini
+     (it sits in your FiveM.app folder - the console message
+      shows the exact full path).
+  3. Add the two lines EXACTLY as the console showed YOU:
+
+        [Addons]
+        ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to game crashes
+
+     IMPORTANT: the ID (xxxxxxxx) is UNIQUE to your PC. Copy the
+     line straight from your own FiveM console - do not use the
+     example above.
+  4. Save the file and start FiveM again.
+
+(If you already use ReShade with FiveM, e.g. via NVE/QuantV,
+ you've likely done this already and can skip it.)
+
+
 NOTE
 ------------------------------------------------------------
 This add-on is made for the NightZoom server and is allowed

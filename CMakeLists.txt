@@ -17,9 +17,10 @@ target_include_directories(NightZoom PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/deps/reshade"
     "${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui")
 
-# winmm  -> timeBeginPeriod/timeEndPeriod
-# shell32 -> ShellExecuteA (Discord link)
-target_link_libraries(NightZoom PRIVATE winmm shell32)
+# winmm        -> timeBeginPeriod/timeEndPeriod
+# shell32      -> ShellExecuteA (Discord link)
+# windowscodecs + ole32 -> WIC (decode NightZoom_logo.png)
+target_link_libraries(NightZoom PRIVATE winmm shell32 windowscodecs ole32)
 
 # Output the addon with ReShade's expected extension: NightZoom.addon64
 set_target_properties(NightZoom PROPERTIES

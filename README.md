@@ -77,7 +77,10 @@ done
 3. Launch the game, open the ReShade overlay (`Home` by default), and find the
    **NightZoom FPS Limiter** window. Tick **Limit to 60 FPS**.
 
-### Optional real logo
+### Logo
 
-The logo is a placeholder by design. See `draw_logo()` in `src/main.cpp` for a `// TODO`
-showing where to load `NightZoom_logo.png` and feed a real texture to `ImGui::Image()`.
+Drop a **`NightZoom_logo.png`** next to `NightZoom.addon64` (same folder). On load the addon
+decodes it (via Windows' built-in WIC), uploads it as a texture, and shows it at the top of the
+window scaled to 200px wide (aspect preserved). If the file is missing or fails to decode, a
+bordered `[ NightZoom logo ]` placeholder is shown instead — nothing breaks. Any reasonable PNG
+works; transparency is supported.

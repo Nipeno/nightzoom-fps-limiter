@@ -16,9 +16,13 @@
 #include <Windows.h>
 #include <shellapi.h>       // ShellExecuteA (open Discord link)
 #include <intrin.h>         // _mm_pause (spin-wait hint)
+#include <wincodec.h>       // WIC: decode NightZoom_logo.png (system component, no extra dep)
+#include <wrl/client.h>     // Microsoft::WRL::ComPtr
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <vector>
+#include <string>
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -42,6 +46,17 @@ static std::atomic<bool> g_limit_enabled{ false };
 
 using clock_type = std::chrono::high_resolution_clock;
 static clock_type::time_point g_last_present = clock_type::now();
+
+// This addon's own module handle (used to locate NightZoom_logo.png next to the DLL).
+static HMODULE g_module = nullptr;
+
+// Logo texture. Created in init_effect_runtime, freed in destroy_effect_runtime.
+// All zero -> no logo loaded; draw_logo() falls back to the bordered placeholder.
+static reshade::api::device       *g_logo_device = nullptr;
+static reshade::api::resource      g_logo_resource = { 0 };
+static reshade::api::resource_view g_logo_view = { 0 };
+static uint32_t g_logo_width = 0;
+static uint32_t g_logo_height = 0;
 
 // ---------------------------------------------------------------------------
 // Frame pacing
@@ -87,26 +102,147 @@ static void on_present(reshade::api::command_queue *, reshade::api::swapchain *,
 // Config persistence (ReShade config, not a custom file)
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Logo loading (one clearly-commented unit, trivial to swap for a real texture)
+// ---------------------------------------------------------------------------
+
+// Full path to "NightZoom_logo.png" sitting next to this DLL.
+static std::wstring logo_file_path()
+{
+	wchar_t path[MAX_PATH] = {};
+	const DWORD len = GetModuleFileNameW(g_module, path, MAX_PATH);
+	std::wstring dir(path, len);
+	const size_t slash = dir.find_last_of(L"\\/");
+	if (slash != std::wstring::npos)
+		dir.resize(slash + 1);
+	return dir + L"NightZoom_logo.png";
+}
+
+// Decode a PNG to tightly-packed 32-bit RGBA using WIC (a Windows system component).
+// Returns false if the file is missing or cannot be decoded.
+static bool decode_png_rgba(const std::wstring &path, std::vector<uint8_t> &pixels, uint32_t &width, uint32_t &height)
+{
+	using Microsoft::WRL::ComPtr;
+
+	// COM may already be initialised by the game; tolerate a different threading model.
+	const HRESULT co = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	const bool co_owned = SUCCEEDED(co);
+
+	bool ok = false;
+	{
+		ComPtr<IWICImagingFactory> factory;
+		ComPtr<IWICBitmapDecoder> decoder;
+		ComPtr<IWICBitmapFrameDecode> frame;
+		ComPtr<IWICFormatConverter> converter;
+
+		if (SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory))) &&
+		    SUCCEEDED(factory->CreateDecoderFromFilename(path.c_str(), nullptr, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &decoder)) &&
+		    SUCCEEDED(decoder->GetFrame(0, &frame)) &&
+		    SUCCEEDED(factory->CreateFormatConverter(&converter)) &&
+		    SUCCEEDED(converter->Initialize(frame.Get(), GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom)))
+		{
+			UINT w = 0, h = 0;
+			if (SUCCEEDED(converter->GetSize(&w, &h)) && w > 0 && h > 0)
+			{
+				const UINT stride = w * 4;
+				pixels.resize(static_cast<size_t>(stride) * h);
+				if (SUCCEEDED(converter->CopyPixels(nullptr, stride, static_cast<UINT>(pixels.size()), pixels.data())))
+				{
+					width = w;
+					height = h;
+					ok = true;
+				}
+			}
+		}
+	}
+
+	if (co_owned)
+		CoUninitialize();
+	return ok;
+}
+
+// Create the GPU texture for the logo on the runtime's device, if the PNG exists.
+static void load_logo_texture(reshade::api::effect_runtime *runtime)
+{
+	std::vector<uint8_t> pixels;
+	uint32_t w = 0, h = 0;
+	if (!decode_png_rgba(logo_file_path(), pixels, w, h))
+		return; // No file / decode failed -> placeholder is drawn instead.
+
+	reshade::api::device *device = runtime->get_device();
+
+	const reshade::api::resource_desc desc(
+		w, h, 1, 1, reshade::api::format::r8g8b8a8_unorm, 1,
+		reshade::api::memory_heap::gpu_only, reshade::api::resource_usage::shader_resource);
+
+	const reshade::api::subresource_data initial{ pixels.data(), w * 4u, w * h * 4u };
+
+	reshade::api::resource res = { 0 };
+	if (!device->create_resource(desc, &initial, reshade::api::resource_usage::shader_resource, &res))
+		return;
+
+	reshade::api::resource_view view = { 0 };
+	if (!device->create_resource_view(res, reshade::api::resource_usage::shader_resource,
+	                                  reshade::api::resource_view_desc(reshade::api::format::r8g8b8a8_unorm), &view))
+	{
+		device->destroy_resource(res);
+		return;
+	}
+
+	g_logo_device = device;
+	g_logo_resource = res;
+	g_logo_view = view;
+	g_logo_width = w;
+	g_logo_height = h;
+}
+
+static void free_logo_texture()
+{
+	if (g_logo_device != nullptr)
+	{
+		if (g_logo_view.handle != 0)
+			g_logo_device->destroy_resource_view(g_logo_view);
+		if (g_logo_resource.handle != 0)
+			g_logo_device->destroy_resource(g_logo_resource);
+	}
+	g_logo_device = nullptr;
+	g_logo_resource = { 0 };
+	g_logo_view = { 0 };
+	g_logo_width = g_logo_height = 0;
+}
+
 static void on_init_effect_runtime(reshade::api::effect_runtime *runtime)
 {
 	bool value = false;
 	if (reshade::get_config_value(runtime, kConfigSection, kConfigKey, value))
 		g_limit_enabled.store(value, std::memory_order_relaxed);
+
+	load_logo_texture(runtime);
+}
+
+static void on_destroy_effect_runtime(reshade::api::effect_runtime *)
+{
+	free_logo_texture();
 }
 
 // ---------------------------------------------------------------------------
-// Logo (one clearly-commented function, trivial to swap for a real texture)
+// Logo drawing
 // ---------------------------------------------------------------------------
 
-// Draws the logo at the top of the window. Currently a bordered text placeholder
-// at a fixed 200x80 size.
-//
-// TODO: To show a real logo, read "NightZoom_logo.png" from the addon's own
-// directory, create a texture on the runtime's device (runtime->get_device() ->
-// create_resource / create_resource_view), and pass its handle to ImGui::Image()
-// here instead of the bordered box below.
+// Draws the real logo texture if one was loaded; otherwise a bordered
+// "[ NightZoom logo ]" placeholder at a fixed 200x80 size.
 static void draw_logo()
 {
+	if (g_logo_view.handle != 0)
+	{
+		// Fit the logo to a 200px width, preserving aspect ratio.
+		const float target_w = 200.0f;
+		const float scale = target_w / static_cast<float>(g_logo_width);
+		ImGui::Image(static_cast<ImTextureID>(g_logo_view.handle),
+		             ImVec2(target_w, static_cast<float>(g_logo_height) * scale));
+		return;
+	}
+
 	const ImVec2 size(200.0f, 80.0f);
 	const ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -168,10 +304,12 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID)
 	switch (reason)
 	{
 	case DLL_PROCESS_ATTACH:
+		g_module = hModule;
 		if (!reshade::register_addon(hModule))
 			return FALSE;
 		timeBeginPeriod(1); // Tighten sleep granularity for the pacing loop.
 		reshade::register_event<reshade::addon_event::init_effect_runtime>(on_init_effect_runtime);
+		reshade::register_event<reshade::addon_event::destroy_effect_runtime>(on_destroy_effect_runtime);
 		reshade::register_event<reshade::addon_event::present>(on_present);
 		reshade::register_overlay("NightZoom FPS Limiter", draw_overlay);
 		break;

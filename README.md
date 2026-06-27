@@ -7,37 +7,20 @@ one button - turn it on to cap, turn it off to unlock.
 
 ## ⚠️ Please read first
 
-This add-on is made for the **NightZoom** server and is probably allowed there (waiting for BJJ to respond to my DM). On **other servers, use it at your own risk** - every server sets its own rules, and some
-anticheats may flag add-ons that load into the game. If you're unsure about a server, ask its
-staff first, or just don't use it there.
+Made for the **NightZoom** racing server, where it's allowed. On **other servers, use it at your
+own risk** - every server sets its own rules, and some anticheats may flag add-ons that load into
+the game. If you're unsure about a server, ask its staff first.
 
-Also: this needs the **add-on-enabled** build of ReShade - and the download includes it, so
-you're covered even if you've never used ReShade. Graphics packs like NVE and QuantV already
-include ReShade too.
+It needs the **add-on-enabled** build of ReShade - and the download includes it, so you're
+covered even if you've never used ReShade. Graphics packs like NVE and QuantV already include
+ReShade too.
 
 ## How to install
 
 Download **`NZ-FPS-Limiter…zip`** from the
 [**Releases page**](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest), extract it,
-and open the included **`INSTALL.html`** - it walks you through the whole setup, including the
+and open the included **`Install Guide.html`** - it walks you through the whole setup, including the
 one-time FiveM "ReShade was blocked" fix. The zip bundles ReShade, so it's all you need.
-
-## How to use
-
-1. In-game, open the ReShade menu. The key is **Home** by default - but some graphics packs set
-   their own: **NVE uses `Insert`**. If one doesn't work, try the other. (You can see/change the
-   key in ReShade's Settings.) The very first time, ReShade shows a welcome/tutorial popup - click
-   **Continue** or **Skip Tutorial** to get past it.
-2. Find the **NightZoom FPS Limiter** window.
-3. Tick **Limit to 60 FPS** to cap your frame rate. Untick it to unlock.
-
-Your choice is remembered - it stays the same next time you launch the game.
-
-## Why 60 FPS?
-
-GTA's physics is tied to your frame rate - higher FPS can change how a car behaves. On a racing
-server that's unfair: people on stronger PCs would get an edge. Capping everyone to 60 FPS keeps
-the physics consistent so nobody has an advantage.
 
 ## Is it safe? What does it do?
 
@@ -55,9 +38,14 @@ inside the add-on too.
 
 ## Community
 
-Made for **NightZoom**. Come say hi, get help, or report a bug:
+Questions, need help, or found a bug? Come say hi:
 
 👉 **<https://discord.gg/nightzoom>**
+
+## Credits
+
+- Developer: **Nipeno**
+- Testers: **Beanz**, **Cenkov**, **PhatWraith**, **krispy lzz**
 
 ## For developers
 

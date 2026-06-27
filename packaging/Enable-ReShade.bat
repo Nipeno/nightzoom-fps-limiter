@@ -42,7 +42,7 @@ Write-Host '  ------------------------------------------------'
 # 1) Compute this PC's ReShade5 acknowledgement ID.
 #    FiveM uses Joaat(lowercase(COMPUTERNAME)), ASCII only. Verified: PC -> 46750aa6.
 #    (Non-ASCII PC names are rare; if the ID looks wrong, use the manual steps in
-#     INSTALL.html instead.)
+#     Install Guide.html instead.)
 $name = $env:COMPUTERNAME
 if ([string]::IsNullOrEmpty($name)) { $name = 'a' }
 
@@ -87,7 +87,7 @@ if (-not $ini) {
     Write-Host '  Could not find your FiveM folder automatically.' -ForegroundColor Yellow
     Write-Host '  Put this file in your FiveM plugins folder and run it again:'
     Write-Host '    %localappdata%\FiveM\FiveM.app\plugins'
-    Write-Host '  ...or follow the manual steps in INSTALL.html.'
+    Write-Host '  ...or follow the manual steps in Install Guide.html.'
     exit 1
 }
 

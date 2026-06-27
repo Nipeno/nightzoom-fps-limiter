@@ -64,7 +64,7 @@ jobs:
           Copy-Item dxgi.dll                             'dist/Copy-these-into-plugins/'
           Copy-Item packaging/Enable-ReShade.bat         'dist/Copy-these-into-plugins/'
           # Guide + licenses stay at the zip root.
-          Copy-Item packaging/INSTALL.html           dist/
+          Copy-Item 'packaging/Install Guide.html'   dist/
           Copy-Item third_party/ReShade-LICENSE.txt  dist/
           Copy-Item LICENSE                          dist/LICENSE.txt
           $zip = "NZ-FPS-Limiter_v$env:reshade_version.zip"
@@ -87,7 +87,7 @@ jobs:
           body: |
             Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
 
-            **Install:** download the zip, extract it, and open **`INSTALL.html`** -
+            **Install:** download the zip, extract it, and open **`Install Guide.html`** -
             follow the steps. (It bundles ReShade, so it's all you need.)
 
             💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).

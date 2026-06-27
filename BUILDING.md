@@ -97,11 +97,11 @@ Each build also assembles a drag-and-drop bundle for end users. The
    `7z e ReShade_Setup.exe ReShade64.dll`, then copies it to **`dxgi.dll`** (the name FiveM loads
    ReShade under from its `plugins` folder).
 3. **Zips** `dxgi.dll` + `NZ-FPS-Limiter.addon64` + `packaging/Enable-ReShade.bat` +
-   `packaging/INSTALL.html` + the license notices into `NZ-FPS-Limiter_v<ver>.zip`.
+   `packaging/Install Guide.html` + the license notices into `NZ-FPS-Limiter_v<ver>.zip`.
 
 Every run uploads that single all-in-one zip as the build artifact. When a `v*` **tag** is
 pushed, it's also attached to the matching GitHub Release (`softprops/action-gh-release`, needs
-`permissions: contents: write`). The end-user install guide lives in `packaging/INSTALL.html` -
+`permissions: contents: write`). The end-user install guide lives in `packaging/Install Guide.html` -
 users who already have ReShade just skip the `dxgi.dll` / enable steps (the guide says where).
 
 ### `Enable-ReShade.bat` (FiveM unblock helper)

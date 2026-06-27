@@ -61,10 +61,11 @@ THEN
 HOW TO USE
 ------------------------------------------------------------
   - Press  Home  to open or close the ReShade menu in-game.
-    (Home is the default key - you can change it later in
-     ReShade's Settings. The very first time, ReShade shows a
-     welcome / tutorial pop-up - just click "Continue" or
-     "Skip Tutorial" to get past it.)
+    (Home is the default key, but some graphics packs change it -
+     NVE uses  Insert.  If one doesn't work, try the other. You
+     can see/change the key in ReShade's Settings. The very first
+     time, ReShade shows a welcome / tutorial pop-up - just click
+     "Continue" or "Skip Tutorial" to get past it.)
 
   - In the menu, find the  "NightZoom FPS Limiter"  window.
     If you don't see it, look at the top tabs - make sure

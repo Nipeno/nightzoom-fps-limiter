@@ -33,9 +33,11 @@ INSTALL  (FiveM)
 HOW TO USE
 ------------------------------------------------------------
   - Press  Home  to open or close the ReShade menu in-game.
-    (Home is the default key - you can change it in ReShade's
-     Settings. The first time, ReShade shows a welcome /
-     tutorial pop-up - click "Continue" or "Skip Tutorial".)
+    (Home is the default key, but some graphics packs change it -
+     NVE uses  Insert.  If one doesn't work, try the other. You
+     can see/change the key in ReShade's Settings. The first time,
+     ReShade shows a welcome / tutorial pop-up - click "Continue"
+     or "Skip Tutorial".)
   - Find the  "NightZoom FPS Limiter"  window.
   - Tick   "Limit to 60 FPS"   -> capped at 60.
     Untick it                  -> cap removed instantly.

@@ -42,8 +42,9 @@ Pick the option that matches you. Both downloads are on the
 
 ## How to use
 
-1. In-game, open the ReShade menu (press **Home** by default — you can change this key in
-   ReShade's Settings). The very first time, ReShade shows a welcome/tutorial popup — click
+1. In-game, open the ReShade menu. The key is **Home** by default — but some graphics packs set
+   their own: **NVE uses `Insert`**. If one doesn't work, try the other. (You can see/change the
+   key in ReShade's Settings.) The very first time, ReShade shows a welcome/tutorial popup — click
    **Continue** or **Skip Tutorial** to get past it.
 2. Find the **NightZoom FPS Limiter** window.
 3. Tick **Limit to 60 FPS** to cap your frame rate. Untick it to unlock.

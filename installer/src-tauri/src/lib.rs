@@ -93,7 +93,9 @@ fn resolve_fivem_app(dir: &Path) -> Option<PathBuf> {
         .map(|n| n.eq_ignore_ascii_case("FiveM.app"))
         .unwrap_or(false);
     // Already the app folder (by name, or by the files a launched install leaves behind).
-    if named_app || dir.join("CitizenFX.ini").exists() || dir.join("plugins").is_dir() {
+    // Must exist on disk — the default LOCALAPPDATA candidate is named FiveM.app but may not
+    // be present (custom-path install, or FiveM not installed here at all).
+    if dir.is_dir() && (named_app || dir.join("CitizenFX.ini").exists() || dir.join("plugins").is_dir()) {
         return Some(dir.to_path_buf());
     }
     // Parent that contains a FiveM.app subfolder (custom-path install; FiveM.exe lives here).

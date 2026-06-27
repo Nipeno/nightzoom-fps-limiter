@@ -11,34 +11,29 @@ This add-on is made for the **NightZoom** server and is probably allowed there (
 anticheats may flag add-ons that load into the game. If you're unsure about a server, ask its
 staff first, or just don't use it there.
 
-Also: this needs the **add-on-enabled** build of ReShade. Graphics packs like NVE and QuantV
-already include it; if you don't have ReShade at all, use the all-in-one bundle in
-[Option B](#option-b--you-dont-have-reshade-yet-easiest-all-in-one) below.
+Also: this needs the **add-on-enabled** build of ReShade — and the download includes it, so
+you're covered even if you've never used ReShade. Graphics packs like NVE and QuantV already
+include ReShade too.
 
 ## How to install (FiveM)
 
 Everything goes in your FiveM **plugins** folder. Open it with **Win+R** →
-paste `%localappdata%\FiveM\FiveM.app\plugins` → Enter.
+paste `%localappdata%\FiveM\FiveM.app\plugins` → Enter. (Installed FiveM somewhere custom? That
+path won't open — instead go into `FiveM.app\plugins` inside your own FiveM folder, the one with
+`FiveM.exe`.)
 
-Pick the option that matches you. Both downloads are on the
-[**Releases page**](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest).
+Download **`NZ-FPS-Limiter…zip`** from the
+[**Releases page**](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest) — it
+includes ReShade, so it's all you need.
 
-### Option A — You already have ReShade (NVE, QuantV, other graphics pack)
+1. Extract **`NZ-FPS-Limiter.addon64`** into the `plugins` folder.
+2. **Already have ReShade?** (NVE, QuantV, another graphics pack — the ReShade menu already
+   opens in game.) That's it: **don't** copy the bundled `dxgi.dll` (two copies conflict).
+   Start FiveM and jump to [How to use](#how-to-use).
+3. **No ReShade yet?** Also extract the bundled **`dxgi.dll`** into `plugins`, then double-click
+   **`Enable-ReShade.bat`** (same folder) to allow ReShade in FiveM. Start FiveM.
 
-1. Download **`NightZoom-Addon-Only.zip`**.
-2. Extract **`NightZoom.addon64`** into the `plugins` folder (the included `INSTALL.txt` has the
-   full steps).
-3. Start FiveM.
-
-### Option B — You don't have ReShade yet (easiest, all-in-one)
-
-1. Download **`NightZoom-ReShade-Bundle…zip`**.
-2. Extract everything into the `plugins` folder.
-3. Start FiveM.
-
-> The bundle includes `dxgi.dll`, which is just the official ReShade. If you already have
-> ReShade from a graphics pack, **delete the bundled `dxgi.dll`** (use Option A instead) — two
-> copies will conflict.
+The included `INSTALL.txt` has the full step-by-step.
 
 ## How to use
 
@@ -96,13 +91,13 @@ add the following section to <path>\CitizenFX.ini:
 If you already use ReShade with FiveM (e.g. via NVE / QuantV), you've probably done this already
 and can skip it.
 
-## NightZoom window doesn't show up?
+## NightZoom FPS Limiter window doesn't show up?
 
 If you enabled ReShade but the **NightZoom FPS Limiter** window still isn't there, your existing
 ReShade is probably **too old** to load it (your `ReShade.log` will say something like
 `requested API version … is not supported`). This happens with some older graphics-pack bundles.
 
-**Fix:** download the **`NightZoom-ReShade-Bundle…zip`** and copy its **`dxgi.dll`** into your
+**Fix:** copy the bundled **`dxgi.dll`** (from the `NZ-FPS-Limiter…zip` you downloaded) into your
 `plugins` folder, replacing the old one. It's the latest official ReShade — it still runs NVE /
 QuantV fine (newer ReShade loads older add-ons), it just also supports NightZoom FPS Limiter.
 
@@ -110,8 +105,8 @@ QuantV fine (newer ReShade loads older add-ons), it just also supports NightZoom
 
 1. Close FiveM.
 2. Open the plugins folder: `%localappdata%\FiveM\FiveM.app\plugins`.
-3. Delete **`NightZoom.addon64`**.
-4. Only if you installed the bundled ReShade just for this (Option B) and want ReShade gone too,
+3. Delete **`NZ-FPS-Limiter.addon64`**.
+4. Only if you installed the bundled `dxgi.dll` just for this and want ReShade gone too,
    also delete `dxgi.dll`. If your graphics pack (NVE / QuantV) put ReShade there, **leave
    `dxgi.dll` alone**.
 

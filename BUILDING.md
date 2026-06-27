@@ -3,8 +3,8 @@
 This is the technical/developer documentation. If you just want to *use* the addon, see the
 [README](README.md).
 
-NightZoom is a single-DLL [ReShade](https://reshade.me) addon written in C++17, Windows x64 only.
-The output is `NightZoom.addon64`. All logic lives in [`src/main.cpp`](src/main.cpp).
+NightZoom FPS Limiter is a single-DLL [ReShade](https://reshade.me) addon written in C++17, Windows x64 only.
+The output is `NZ-FPS-Limiter.addon64`. All logic lives in [`src/main.cpp`](src/main.cpp).
 
 ## Build
 
@@ -13,7 +13,7 @@ Prerequisites: Visual Studio 2022 ("Desktop development with C++" workload) and 
 ```sh
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Release
-# -> build/Release/NightZoom.addon64
+# -> build/Release/NZ-FPS-Limiter.addon64
 ```
 
 CI builds the addon on every push via GitHub Actions
@@ -67,12 +67,12 @@ matching `deps/reshade` tag (see refresh steps above).
   to Windows timer granularity). `timeBeginPeriod(1)`/`timeEndPeriod(1)` tighten sleep granularity
   at load/unload.
 - **Persistence** — the checkbox value is read in `init_effect_runtime` and written on toggle via
-  `reshade::get/set_config_value` under the `[NightZoom]` config section.
+  `reshade::get/set_config_value` under the `[NZ-FPS-Limiter]` config section.
 - **Overlay** — registered with a named title via `reshade::register_overlay`, so it appears as its
   own window in the ReShade menu.
 - **Logo** — embedded as a byte array in [`src/logo_data.h`](src/logo_data.h), decoded from memory
   via WIC and uploaded as a ReShade texture (`create_resource` / `create_resource_view`), freed in
-  `destroy_effect_runtime`. If decoding ever fails, a bordered `[ NightZoom logo ]` placeholder is
+  `destroy_effect_runtime`. If decoding ever fails, a bordered `[ NightZoom FPS Limiter logo ]` placeholder is
   drawn instead.
 
 ### Changing the logo
@@ -96,22 +96,17 @@ Each build also assembles a drag-and-drop bundle for end users. The
 2. **Downloads + extracts** the add-on-enabled installer and pulls out `ReShade64.dll` via
    `7z e ReShade_Setup.exe ReShade64.dll`, then copies it to **`dxgi.dll`** (the name FiveM loads
    ReShade under from its `plugins` folder).
-3. **Zips** `dxgi.dll` + `NightZoom.addon64` + `packaging/INSTALL.txt` + the license notices into
-   `NightZoom-ReShade-Bundle_v<ver>.zip`.
+3. **Zips** `dxgi.dll` + `NZ-FPS-Limiter.addon64` + `packaging/Enable-ReShade.bat` +
+   `packaging/INSTALL.txt` + the license notices into `NZ-FPS-Limiter_v<ver>.zip`.
 
-Every run uploads two artifacts:
-
-- **`NightZoom-ReShade-Bundle_v<ver>.zip`** — ReShade + addon + install guide (Option B).
-- **`NightZoom-Addon-Only.zip`** — just `NightZoom.addon64` + a dedicated `INSTALL.txt` + license,
-  for people who already have ReShade (Option A).
-
-When a `v*` **tag** is pushed, both ZIPs are also attached to the matching GitHub Release
-(`softprops/action-gh-release`, needs `permissions: contents: write`). The end-user install texts
-live in `packaging/INSTALL.txt` (bundle) and `packaging/INSTALL-addon-only.txt`.
+Every run uploads that single all-in-one zip as the build artifact. When a `v*` **tag** is
+pushed, it's also attached to the matching GitHub Release (`softprops/action-gh-release`, needs
+`permissions: contents: write`). The end-user install guide lives in `packaging/INSTALL.txt` —
+users who already have ReShade just skip the `dxgi.dll` / enable steps (the guide says where).
 
 ### `Enable-ReShade.bat` (FiveM unblock helper)
 
-`packaging/Enable-ReShade.bat` is bundled into **both** zips. FiveM blocks ReShade 5+ until the
+`packaging/Enable-ReShade.bat` is bundled into the zip. FiveM blocks ReShade 5+ until the
 user adds `[Addons] ReShade5=ID:<id> acknowledged ...` to `CitizenFX.ini`. The `<id>` is
 **`Joaat(lowercase(%COMPUTERNAME%))`** — derived purely from the PC name (see FiveM
 `code/components/rage-graphics-five/src/ReShadeFixups.cpp` + `HashString` in
@@ -143,6 +138,6 @@ Vendored headers and the bundled binary keep their upstream notices under `third
 
 ## License
 
-NightZoom itself is GPLv3 — see [LICENSE](LICENSE). Any distributed fork or derivative must also
+NightZoom FPS Limiter itself is GPLv3 — see [LICENSE](LICENSE). Any distributed fork or derivative must also
 be open-sourced under the GPL. (Bundling the BSD-licensed ReShade alongside it is "mere
 aggregation" and permitted.)

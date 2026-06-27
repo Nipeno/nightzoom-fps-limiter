@@ -4,102 +4,100 @@
   Made by Nipeno  -  Discord: https://discord.gg/nightzoom
 ==========================================================
 
+This zip has EVERYTHING: the 60 FPS limiter AND ReShade (the
+thing that runs it). If you already have ReShade working in
+FiveM, you'll skip a couple of steps - the guide says where.
+
+
 WHAT'S IN THIS ZIP
 ------------------------------------------------------------
-  dxgi.dll            <- ReShade (official). The thing that
-                         loads add-ons. ONLY needed if you do
-                         NOT already have ReShade.
-  NightZoom.addon64   <- The 60 FPS limiter itself.
-  INSTALL.txt         <- This file.
-  ReShade-LICENSE.txt <- License for the bundled ReShade.
-  LICENSE.txt         <- License for NightZoom (GPLv3).
+  NZ-FPS-Limiter.addon64 <- The 60 FPS limiter.
+  dxgi.dll               <- ReShade itself (official). Only
+                            needed if you do NOT already have it.
+  Enable-ReShade.bat     <- One click: "allow ReShade in FiveM".
+  INSTALL.txt            <- This file.
+  ReShade-LICENSE.txt    <- License for the bundled ReShade.
+  LICENSE.txt            <- License for NightZoom FPS Limiter.
+
+
+INSTALL  (FiveM)
+------------------------------------------------------------
+
+STEP 1 - Open your FiveM "plugins" folder.
+   Press  Win+R , paste this line, press Enter:
+
+       %localappdata%\FiveM\FiveM.app\plugins
+
+   A folder window opens. Leave it open.
+
+   Error, or nothing opened? Then FiveM isn't in the default
+   spot. Open YOUR FiveM install folder instead (the one that
+   has FiveM.exe) and go into the  FiveM.app\plugins  inside it.
+
+STEP 2 - Copy  NZ-FPS-Limiter.addon64  into that folder.
+
+   >>> ALREADY HAVE RESHADE WORKING IN FIVEM? <<<
+   (e.g. you run NVE, QuantV, or another graphics pack, and the
+    ReShade menu already opens in game)
+   Then you're done setting up - SKIP to STEP 5. Do NOT copy the
+   dxgi.dll: you already have ReShade, and two copies conflict.
+
+STEP 3 - Copy  dxgi.dll  into the plugins folder too.
+   (This file IS ReShade. Only do this if you do NOT already
+    have ReShade.)
+
+   Copy the FILES themselves, not a folder. If extracting made a
+   folder, open it and copy what's INSIDE. When done, the plugins
+   folder should show  dxgi.dll  directly, not a sub-folder.
+
+STEP 4 - Allow ReShade in FiveM (one time).
+   In the plugins folder, double-click:
+
+       Enable-ReShade.bat
+
+   It sets everything up by itself. Press a key to close it.
+   - Blue "Windows protected your PC" box? Click "More info" ->
+     "Run anyway". (Open source - read it in Notepad first if you
+     like.)
+   - Says it couldn't find FiveM? See "IF THE .BAT CAN'T FIND
+     FIVEM" below.
+
+STEP 5 - Start FiveM, then turn the limiter ON.
+   Press  Home  to open the ReShade menu. (Some setups - like
+   NVE - use  Insert  instead; if Home does nothing, try Insert.)
+   First time, ReShade shows a tutorial pop-up: click "Continue"
+   or "Skip Tutorial".
+   Find the  "NightZoom FPS Limiter"  window and tick
+   "Limit to 60 FPS".
+
+   DONE. Your choice is saved for next time.
 
 
 WHY 60 FPS?
 ------------------------------------------------------------
-GTA's physics is tied to your frame rate - higher FPS can
-change how the car behaves. On a racing server that's unfair:
-people on stronger PCs would get an edge. Capping everyone to
-60 FPS keeps the physics consistent so nobody has an advantage.
+GTA's physics is tied to your frame rate - higher FPS can change
+how the car behaves. On a racing server that's unfair: people on
+stronger PCs would get an edge. Capping everyone to 60 FPS keeps
+the physics consistent so nobody has an advantage.
 
 
-WHERE THINGS GO  (FiveM)
+STILL DON'T SEE THE WINDOW?  (your ReShade is too old)
 ------------------------------------------------------------
-Everything goes in your FiveM "plugins" folder:
+If you skipped to STEP 5 using your own ReShade but the
+"NightZoom FPS Limiter" window never shows up, that ReShade is
+probably too old to load it (check ReShade.log for "requested
+API version ... is not supported").
 
-  C:\Users\<YOU>\AppData\Local\FiveM\FiveM.app\plugins\
+Fix: do STEP 3 - copy THIS zip's  dxgi.dll  into your plugins
+folder, replacing the old one - then start FiveM again. It's the
+latest official ReShade and still runs NVE / QuantV fine.
 
-Tip: press Win+R, paste this, press Enter:
-  %localappdata%\FiveM\FiveM.app\plugins
 
-
-PICK ONE OF THE TWO OPTIONS BELOW
+IF THE .BAT CAN'T FIND FIVEM  (manual allow)
 ------------------------------------------------------------
-
-OPTION A - You ALREADY have ReShade
-(e.g. you run NVE, QuantV, or another graphics pack)
-  1. Copy ONLY  NightZoom.addon64  into the plugins folder.
-  2. DELETE the  dxgi.dll  from this zip - do NOT copy it.
-     (You already have a ReShade; two will conflict.)
-
-OPTION B - You do NOT have ReShade yet
-  1. Copy ALL files from this zip into the plugins folder.
-     NOTE: copy the FILES (dxgi.dll, NightZoom.addon64, ...),
-     NOT a folder. If Windows "Extract All" made a folder, open
-     it and copy what's INSIDE - the plugins folder should
-     contain dxgi.dll directly, not a sub-folder.
-
-
-THEN
-------------------------------------------------------------
-  1. Start FiveM / join the server.
-  2. Press  Home  to open the ReShade menu.
-  3. Find the  "NightZoom FPS Limiter"  window.
-  4. Tick  "Limit to 60 FPS".  Done - your choice is saved.
-
-
-HOW TO USE
-------------------------------------------------------------
-  - Press  Home  to open or close the ReShade menu in-game.
-    (Home is the default key, but some graphics packs change it -
-     NVE uses  Insert.  If one doesn't work, try the other. You
-     can see/change the key in ReShade's Settings. The very first
-     time, ReShade shows a welcome / tutorial pop-up - just click
-     "Continue" or "Skip Tutorial" to get past it.)
-
-  - In the menu, find the  "NightZoom FPS Limiter"  window.
-    If you don't see it, look at the top tabs - make sure
-    you're on the "Home" / add-ons view, not "Settings".
-    Still missing? If you chose Option A and kept an OLD ReShade
-    from a graphics pack, it may be too old to load NightZoom
-    FPS Limiter -
-    use the  dxgi.dll  from this zip instead (Option B).
-
-  - Tick   "Limit to 60 FPS"   -> your game is now capped at 60.
-    Untick it                  -> the cap is removed instantly.
-
-  - Your choice is saved automatically and stays set the next
-    time you launch.
-
-  - Press  Home  again to close the menu and keep playing.
-
-
-IMPORTANT: FIRST LAUNCH - "ReShade was blocked"
-------------------------------------------------------------
-FiveM blocks modern ReShade by default, so you have to allow it
-once. There are two ways:
-
-EASY (recommended):
-  1. Make sure the files are already in the plugins folder.
-  2. Double-click  Enable-ReShade.bat  (it's in this zip).
-     It sets everything up automatically.
-     - If Windows shows a blue "Windows protected your PC" box,
-       click "More info" -> "Run anyway". (The script is open
-       source - you can read it in a text editor first.)
-  3. Start FiveM. Done.
-
-MANUAL (if you'd rather do it yourself, or the .bat can't find
-FiveM): the first time, you'll see red text in the FiveM console:
+Only needed if Enable-ReShade.bat couldn't locate FiveM. The
+first time you launch with ReShade, FiveM's console shows red
+text like:
 
   Blocked load of ReShade version 5 or higher ...
   add the following section to <path>\CitizenFX.ini:
@@ -107,38 +105,44 @@ FiveM): the first time, you'll see red text in the FiveM console:
      ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug...
 
   1. Fully close FiveM.
-  2. Open the file it named:  CitizenFX.ini  (it sits in your
-     FiveM.app folder - the console shows the exact full path).
-  3. Add the two lines EXACTLY as the console showed YOU:
+  2. Open the file it named:  CitizenFX.ini  (in your FiveM.app
+     folder - the console shows the exact full path).
+  3. Add the two lines EXACTLY as YOUR console showed them:
 
         [Addons]
         ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to game crashes
 
-     The ID (xxxxxxxx) is UNIQUE to your PC - copy the line from
-     your own FiveM console, not from this example.
-  4. Save the file and start FiveM again.
+     The ID (xxxxxxxx) is UNIQUE to your PC - copy it from your
+     own console, not from this example.
+  4. Save and start FiveM again.
 
-(If you already use ReShade with FiveM, e.g. via NVE/QuantV,
- you've likely done this already and can skip it.)
+
+HOW TO USE
+------------------------------------------------------------
+  - Press  Home  (or  Insert) to open/close the ReShade menu.
+  - In the  "NightZoom FPS Limiter"  window:
+       tick   "Limit to 60 FPS"  -> capped at 60.
+       untick it                 -> cap removed instantly.
+  - Your choice is saved and stays set next launch.
+  - Don't see the window? Make sure you're on the "Home" /
+    add-ons tab, not "Settings".
 
 
 HOW TO UNINSTALL
 ------------------------------------------------------------
   1. Close FiveM.
-  2. Open the plugins folder:
-       %localappdata%\FiveM\FiveM.app\plugins
-  3. Delete  NightZoom.addon64.
-  4. Only if you installed the bundled ReShade just for this
-     (Option B) and want ReShade gone too, also delete  dxgi.dll.
-     If your graphics pack (NVE/QuantV) put ReShade there,
-     LEAVE dxgi.dll alone.
+  2. Open  %localappdata%\FiveM\FiveM.app\plugins
+  3. Delete  NZ-FPS-Limiter.addon64.
+  4. Only if you added this zip's dxgi.dll JUST for this and want
+     ReShade gone too, also delete  dxgi.dll. If a graphics pack
+     (NVE/QuantV) put ReShade there, LEAVE dxgi.dll alone.
 
 
 NOTE
 ------------------------------------------------------------
 This add-on is made for the NightZoom server. On OTHER servers,
-use it at your own risk - every server sets its own rules.
-If unsure, ask the server staff.
+use it at your own risk - every server sets its own rules. If
+unsure, ask the server staff.
 
 Source code (open source, GPLv3):
   https://github.com/Nipeno/nightzoom-fps-limiter

@@ -8,3 +8,6 @@
 .vs/
 CMakeCache.txt
 CMakeFiles/
+
+# Local notes for AI sessions — do not commit
+CLAUDE.md

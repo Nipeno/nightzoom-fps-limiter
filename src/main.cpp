@@ -1,5 +1,13 @@
 // NightZoom FPS Limiter - a ReShade addon that hard-caps the frame rate to 60 FPS.
 //
+// Copyright (C) 2026 Nipeno
+//
+// This program is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free Software
+// Foundation, either version 3 of the License, or (at your option) any later
+// version. This program is distributed WITHOUT ANY WARRANTY. See the GNU General
+// Public License (LICENSE file) for details: https://www.gnu.org/licenses/
+//
 // Build target: single DLL renamed to NightZoom.addon64 (Windows x64).
 // Requires the ADDON-ENABLED build of ReShade.
 //
@@ -37,6 +45,7 @@ static constexpr const char *kConfigSection = "NightZoom";
 static constexpr const char *kConfigKey     = "LimitTo60";
 
 static constexpr const char *kDiscordUrl = "https://discord.gg/nightzoom";
+static constexpr const char *kGithubUrl  = "https://github.com/Nipeno/nightzoom-fps-limiter";
 
 // ---------------------------------------------------------------------------
 // State
@@ -274,6 +283,13 @@ static void draw_overlay(reshade::api::effect_runtime *runtime)
 	if (ImGui::Button("Join the Discord"))
 		ShellExecuteA(nullptr, "open", kDiscordUrl, nullptr, nullptr, SW_SHOWNORMAL);
 	ImGui::TextUnformatted(kDiscordUrl); // Selectable/copyable if the click is blocked.
+
+	ImGui::Spacing();
+
+	// Source code: open the GitHub repo so users can read what they installed.
+	if (ImGui::Button("View Source on GitHub"))
+		ShellExecuteA(nullptr, "open", kGithubUrl, nullptr, nullptr, SW_SHOWNORMAL);
+	ImGui::TextUnformatted(kGithubUrl); // Selectable/copyable fallback.
 }
 
 // ---------------------------------------------------------------------------

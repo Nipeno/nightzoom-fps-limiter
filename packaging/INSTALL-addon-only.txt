@@ -8,7 +8,7 @@ This is the ADD-ON-ONLY download. Use this if you ALREADY have
 ReShade (for example from a graphics pack like NVE or QuantV).
 
 If you do NOT have ReShade yet, download the all-in-one
-"NightZoom-FiveM-Bundle" zip instead - it includes ReShade.
+"NightZoom-ReShade-Bundle" zip instead - it includes ReShade.
 
 
 WHY 60 FPS?

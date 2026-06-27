@@ -97,11 +97,11 @@ Each build also assembles a drag-and-drop bundle for end users. The
    `7z e ReShade_Setup.exe ReShade64.dll`, then copies it to **`dxgi.dll`** (the name FiveM loads
    ReShade under from its `plugins` folder).
 3. **Zips** `dxgi.dll` + `NightZoom.addon64` + `packaging/INSTALL.txt` + the license notices into
-   `NightZoom-FiveM-Bundle_ReShade-<ver>.zip`.
+   `NightZoom-ReShade-Bundle_v<ver>.zip`.
 
 Every run uploads two artifacts:
 
-- **`NightZoom-FiveM-Bundle_ReShade-<ver>.zip`** — ReShade + addon + install guide (Option B).
+- **`NightZoom-ReShade-Bundle_v<ver>.zip`** — ReShade + addon + install guide (Option B).
 - **`NightZoom-Addon-Only.zip`** — just `NightZoom.addon64` + a dedicated `INSTALL.txt` + license,
   for people who already have ReShade (Option A).
 

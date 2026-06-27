@@ -44,6 +44,10 @@ OPTION A - You ALREADY have ReShade
 
 OPTION B - You do NOT have ReShade yet
   1. Copy ALL files from this zip into the plugins folder.
+     NOTE: copy the FILES (dxgi.dll, NightZoom.addon64, ...),
+     NOT a folder. If Windows "Extract All" made a folder, open
+     it and copy what's INSIDE - the plugins folder should
+     contain dxgi.dll directly, not a sub-folder.
 
 
 THEN

@@ -63,7 +63,7 @@ jobs:
           Copy-Item packaging/INSTALL.txt            dist/
           Copy-Item third_party/ReShade-LICENSE.txt  dist/
           Copy-Item LICENSE                          dist/LICENSE.txt
-          $zip = "NightZoom-FiveM-Bundle_ReShade-$env:reshade_version.zip"
+          $zip = "NightZoom-ReShade-Bundle_v$env:reshade_version.zip"
           Compress-Archive -Path dist/* -DestinationPath $zip -Force
           "bundle_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
@@ -82,7 +82,7 @@ jobs:
       - name: Upload bundle (zip)
         uses: actions/upload-artifact@v4
         with:
-          name: NightZoom-FiveM-Bundle
+          name: NightZoom-ReShade-Bundle
           path: ${{ env.bundle_zip }}
 
       - name: Upload addon-only (zip)

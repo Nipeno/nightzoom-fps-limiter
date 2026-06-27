@@ -32,7 +32,7 @@ Pick the option that matches you. Both downloads are on the
 
 ### Option B — You don't have ReShade yet (easiest, all-in-one)
 
-1. Download **`NightZoom-FiveM-Bundle…zip`**.
+1. Download **`NightZoom-ReShade-Bundle…zip`**.
 2. Extract everything into the `plugins` folder.
 3. Start FiveM.
 

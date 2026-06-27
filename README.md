@@ -41,11 +41,19 @@ Pick the option that matches you. Both downloads are on the
 
 ## How to use
 
-1. In-game, open the ReShade menu (press **Home** by default).
+1. In-game, open the ReShade menu (press **Home** by default — you can change this key in
+   ReShade's Settings). The very first time, ReShade shows a welcome/tutorial popup — click
+   **Continue** or **Skip Tutorial** to get past it.
 2. Find the **NightZoom FPS Limiter** window.
 3. Tick **Limit to 60 FPS** to cap your frame rate. Untick it to unlock.
 
 Your choice is remembered — it stays the same next time you launch the game.
+
+## Why 60 FPS?
+
+GTA's physics is tied to your frame rate — higher FPS can change how a car behaves. On a racing
+server that's unfair: people on stronger PCs would get an edge. Capping everyone to 60 FPS keeps
+the physics consistent so nobody has an advantage.
 
 ## First launch: "ReShade was blocked" (one-time fix)
 
@@ -75,6 +83,15 @@ To allow it (you only do this once):
 
 If you already use ReShade with FiveM (e.g. via NVE / QuantV), you've probably done this already
 and can skip it.
+
+## How to uninstall
+
+1. Close FiveM.
+2. Open the plugins folder: `%localappdata%\FiveM\FiveM.app\plugins`.
+3. Delete **`NightZoom.addon64`**.
+4. Only if you installed the bundled ReShade just for this (Option B) and want ReShade gone too,
+   also delete `dxgi.dll`. If your graphics pack (NVE / QuantV) put ReShade there, **leave
+   `dxgi.dll` alone**.
 
 ## Is it safe? What does it do?
 

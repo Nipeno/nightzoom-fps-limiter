@@ -15,6 +15,14 @@ WHAT'S IN THIS ZIP
   LICENSE.txt         <- License for NightZoom (GPLv3).
 
 
+WHY 60 FPS?
+------------------------------------------------------------
+GTA's physics is tied to your frame rate - higher FPS can
+change how the car behaves. On a racing server that's unfair:
+people on stronger PCs would get an edge. Capping everyone to
+60 FPS keeps the physics consistent so nobody has an advantage.
+
+
 WHERE THINGS GO  (FiveM)
 ------------------------------------------------------------
 Everything goes in your FiveM "plugins" folder:
@@ -44,6 +52,27 @@ THEN
   2. Press  Home  to open the ReShade menu.
   3. Find the  "NightZoom FPS Limiter"  window.
   4. Tick  "Limit to 60 FPS".  Done - your choice is saved.
+
+
+HOW TO USE
+------------------------------------------------------------
+  - Press  Home  to open or close the ReShade menu in-game.
+    (Home is the default key - you can change it later in
+     ReShade's Settings. The very first time, ReShade shows a
+     welcome / tutorial pop-up - just click "Continue" or
+     "Skip Tutorial" to get past it.)
+
+  - In the menu, find the  "NightZoom FPS Limiter"  window.
+    If you don't see it, look at the top tabs - make sure
+    you're on the "Home" / add-ons view, not "Settings".
+
+  - Tick   "Limit to 60 FPS"   -> your game is now capped at 60.
+    Untick it                  -> the cap is removed instantly.
+
+  - Your choice is saved automatically and stays set the next
+    time you launch.
+
+  - Press  Home  again to close the menu and keep playing.
 
 
 IMPORTANT: FIRST LAUNCH - "ReShade was blocked"
@@ -76,11 +105,23 @@ To allow ReShade (one-time fix):
  you've likely done this already and can skip it.)
 
 
+HOW TO UNINSTALL
+------------------------------------------------------------
+  1. Close FiveM.
+  2. Open the plugins folder:
+       %localappdata%\FiveM\FiveM.app\plugins
+  3. Delete  NightZoom.addon64.
+  4. Only if you installed the bundled ReShade just for this
+     (Option B) and want ReShade gone too, also delete  dxgi.dll.
+     If your graphics pack (NVE/QuantV) put ReShade there,
+     LEAVE dxgi.dll alone.
+
+
 NOTE
 ------------------------------------------------------------
-This add-on is made for the NightZoom server and is allowed
-there. On OTHER servers, use it at your own risk - every
-server sets its own rules. If unsure, ask the server staff.
+This add-on is made for the NightZoom server. On OTHER servers,
+use it at your own risk - every server sets its own rules.
+If unsure, ask the server staff.
 
 Source code (open source, GPLv3):
   https://github.com/Nipeno/nightzoom-fps-limiter

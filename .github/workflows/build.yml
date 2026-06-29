@@ -34,7 +34,7 @@ jobs:
 
       # Untagged dev builds are version 0.0.0 (the real version comes from the tag in release.yml).
       - name: Configure (MSVC x64)
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION=0.0.0
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION="0.0.0"
 
       - name: Build (Release)
         run: cmake --build build --config Release

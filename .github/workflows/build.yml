@@ -5,17 +5,37 @@ on:
     branches: [ main ]
     tags: [ 'v*' ]
   pull_request:
-    # The addon doesn't depend on installer/** — skip the C++ build for installer-only PRs
-    # (installer.yml handles those). Mixed PRs still build both.
-    paths-ignore:
-      - 'installer/**'
   workflow_dispatch:   # lets you trigger a build manually from the Actions tab
 
 permissions:
   contents: write      # needed to attach assets to a Release on tag
 
 jobs:
+  # Cheap gate (ubuntu) so the expensive Windows build only runs when the addon actually
+  # changed. Path filters can't live on the push trigger itself — they'd also gate v* tags
+  # and could skip a release — so we gate the job and always allow tags / manual runs.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      addon: ${{ steps.filter.outputs.addon }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            addon:
+              - 'src/**'
+              - 'deps/**'
+              - 'CMakeLists.txt'
+              - '.github/workflows/build.yml'
+
   build:
+    needs: changes
+    if: >-
+      ${{ needs.changes.outputs.addon == 'true'
+          || startsWith(github.ref, 'refs/tags/')
+          || github.event_name == 'workflow_dispatch' }}
     runs-on: windows-2022
     defaults:
       run:

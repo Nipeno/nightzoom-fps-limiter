@@ -5,17 +5,34 @@ name: Installer
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'installer/**'
-      - '.github/workflows/installer.yml'
     tags: [ 'v*' ]
   pull_request:
-    paths:
-      - 'installer/**'
   workflow_dispatch:
 
 jobs:
+  # Cheap gate (ubuntu) so the expensive Windows/Rust build only runs when the installer
+  # changed. Gating the job (not the push trigger) keeps v* release tags + manual runs
+  # building unconditionally — a path filter on the trigger would also gate tags.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      installer: ${{ steps.filter.outputs.installer }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            installer:
+              - 'installer/**'
+              - '.github/workflows/installer.yml'
+
   build:
+    needs: changes
+    if: >-
+      ${{ needs.changes.outputs.installer == 'true'
+          || startsWith(github.ref, 'refs/tags/')
+          || github.event_name == 'workflow_dispatch' }}
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4

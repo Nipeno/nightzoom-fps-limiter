@@ -8,7 +8,8 @@ on:
   workflow_dispatch:   # lets you trigger a build manually from the Actions tab
 
 permissions:
-  contents: write      # needed to attach assets to a Release on tag
+  contents: write       # needed to attach assets to a Release on tag
+  pull-requests: read   # dorny/paths-filter lists changed files via the API on PRs
 
 jobs:
   # Cheap gate (ubuntu) so the expensive Windows build only runs when the addon actually

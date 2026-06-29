@@ -9,6 +9,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write       # needed to attach the exe to a Release on tag
+  pull-requests: read   # dorny/paths-filter lists changed files via the API on PRs
+
 jobs:
   # Cheap gate (ubuntu) so the expensive Windows/Rust build only runs when the installer
   # changed. Gating the job (not the push trigger) keeps v* release tags + manual runs

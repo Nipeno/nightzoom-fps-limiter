@@ -11,14 +11,32 @@ The output is `NZ-FPS-Limiter.addon64`. All logic lives in [`src/main.cpp`](src/
 Prerequisites: Visual Studio 2022 ("Desktop development with C++" workload) and CMake 3.20+.
 
 ```sh
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION=1.2.0
 cmake --build build --config Release
 # -> build/Release/NZ-FPS-Limiter.addon64
 ```
 
+`-DNZ_VERSION` is optional locally (defaults to `0.0.0`); CI sets it from the git tag. See
+[Versioning](#versioning) below.
+
 CI builds the addon on every push via GitHub Actions
 ([`.github/workflows/build.yml`](.github/workflows/build.yml)) on a `windows-2022` runner; the
 compiled `.addon64` is attached to each run as a build artifact.
+
+## Versioning
+
+The addon's version is **SemVer**, with the **git tag `vX.Y.Z` as the single source of truth**:
+
+- CI derives `X.Y.Z` from the tag and passes `-DNZ_VERSION=X.Y.Z`. Untagged builds (branch/PR)
+  default to `0.0.0`.
+- CMake stamps it into the DLL's Windows **VERSIONINFO** resource (generated from
+  [`src/version.rc.in`](src/version.rc.in)) and defines `NZ_VERSION_STR` for the overlay's
+  "Version x.y.z" label.
+- The release **tag** == the addon version, so the Tauri installer compares the installed addon's
+  file version against the latest release tag to decide install vs update.
+- The release **asset** is named `NZ-FPS-Limiter_v<addon_version>.zip` (no longer the ReShade
+  version); the bundled ReShade version is metadata — `reshade-version.txt` in the zip and a line
+  in the release body.
 
 ## Dependencies
 
@@ -97,7 +115,9 @@ Each build also assembles a drag-and-drop bundle for end users. The
    `7z e ReShade_Setup.exe ReShade64.dll`, then copies it to **`dxgi.dll`** (the name FiveM loads
    ReShade under from its `plugins` folder).
 3. **Zips** `dxgi.dll` + `NZ-FPS-Limiter.addon64` + `packaging/Enable-ReShade.bat` +
-   `packaging/Install Guide.html` + the license notices into `NZ-FPS-Limiter_v<ver>.zip`.
+   `packaging/Install Guide.html` + `reshade-version.txt` + the license notices into
+   `NZ-FPS-Limiter_v<addon_version>.zip` (named by the addon's version — see
+   [Versioning](#versioning)).
 
 Every run uploads that single all-in-one zip as the build artifact. When a `v*` **tag** is
 pushed, it's also attached to the matching GitHub Release (`softprops/action-gh-release`, needs
@@ -118,10 +138,11 @@ from the `#:PS:#` marker) that computes the ID, locates `CitizenFX.ini` (parent 
 folder it ships in, then `%LOCALAPPDATA%`, then the `fivem://` registry handler), and writes the
 key via `WritePrivateProfileString` (same Win32 API FiveM reads with - safe section merge).
 
-To cut a release:
+To cut a release, tag with the new version (the tag drives `NZ_VERSION`, the asset name, and the
+installer's update check):
 
 ```sh
-git tag v1.1.0 && git push origin v1.1.0
+git tag v1.2.0 && git push origin v1.2.0
 ```
 
 > The bundle carries whatever ReShade was latest at release time. Because ReShade loads addons

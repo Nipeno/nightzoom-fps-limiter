@@ -57,6 +57,11 @@ static constexpr const char *kConfigKey     = "LimitTo60";
 static constexpr const char *kDiscordUrl = "https://discord.gg/nightzoom";
 static constexpr const char *kGithubUrl  = "https://github.com/Nipeno/nightzoom-fps-limiter";
 
+// Injected by CMake (-DNZ_VERSION). Fallback keeps non-CMake/standalone builds compiling.
+#ifndef NZ_VERSION_STR
+#define NZ_VERSION_STR "0.0.0"
+#endif
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -311,6 +316,7 @@ static void draw_overlay(reshade::api::effect_runtime *runtime)
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::TextUnformatted("Made by Nipeno");
+	ImGui::TextDisabled("Version %s", NZ_VERSION_STR);
 
 	// Discord link: button opens the invite; full URL shown below as a selectable fallback.
 	if (ImGui::Button("Join the Discord"))

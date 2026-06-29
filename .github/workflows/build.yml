@@ -23,8 +23,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # --- Resolve the addon version ----------------------------------------
+      # Single source of truth: the git tag vX.Y.Z. Untagged builds (branch push,
+      # PR, manual) get 0.0.0 so they're clearly "not a release". Flows into the DLL
+      # VERSIONINFO (-DNZ_VERSION) and the release/asset name.
+      - name: Resolve addon version
+        run: |
+          # Capture only the numeric X.Y.Z core: CMake's project(VERSION) rejects a
+          # prerelease suffix (e.g. a v1.2.0-rc1 tag), so we drop anything after the patch.
+          $ver = '0.0.0'
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -match '^v?([0-9]+\.[0-9]+\.[0-9]+)') {
+            $ver = $Matches[1]
+          }
+          Write-Host "Addon version: $ver"
+          "nz_version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Configure (MSVC x64)
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION=$env:nz_version
 
       - name: Build (Release)
         run: cmake --build build --config Release
@@ -71,7 +86,9 @@ jobs:
           Copy-Item 'packaging/Install Guide.html'   dist/
           Copy-Item third_party/ReShade-LICENSE.txt  dist/
           Copy-Item LICENSE                          dist/LICENSE.txt
-          $zip = "NZ-FPS-Limiter_v$env:reshade_version.zip"
+          # Bundled ReShade version is metadata now (the asset is named by addon version).
+          "$env:reshade_version" | Out-File -FilePath dist/reshade-version.txt -Encoding utf8 -NoNewline
+          $zip = "NZ-FPS-Limiter_v$env:nz_version.zip"
           Compress-Archive -Path dist/* -DestinationPath $zip -Force
           "bundle_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
@@ -93,6 +110,8 @@ jobs:
 
             **Install:** download the zip, extract it, and open **`Install Guide.html`** -
             follow the steps. (It bundles ReShade, so it's all you need.)
+
+            Bundled ReShade: **${{ env.reshade_version }}**.
 
             💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).
           files: ${{ env.bundle_zip }}

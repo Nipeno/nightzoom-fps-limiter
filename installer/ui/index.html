@@ -157,6 +157,10 @@
   h1{font-family:var(--display);font-weight:600;font-size:24px;line-height:1.12;margin:0 0 9px;letter-spacing:.01em;}
   h1 .accent{color:var(--cyan);}
   .lede{font-size:13.5px;line-height:1.5;color:var(--muted);margin:0 0 auto;max-width:42ch;}
+  .verline{margin-top:12px;font-size:12.5px;color:var(--muted);min-height:17px;letter-spacing:.01em;}
+  .verline b{color:var(--text);font-variant-numeric:tabular-nums;}
+  .verline .up{color:var(--good);}
+  .verline .warn{color:var(--amber);}
   .lede strong{color:var(--text);font-weight:600;}
 
   .spacer{flex:1;}
@@ -350,6 +354,7 @@
             </span>
             <button class="chip-change" id="welcome-change" onclick="changePath()">Change…</button>
           </div>
+          <div class="verline" id="welcome-verline" aria-live="polite"></div>
           <div class="actions">
             <button class="btn btn-primary btn-lg" id="install-btn" onclick="startInstall()">Confirm &amp; install</button>
           </div>
@@ -625,6 +630,8 @@
       });
     }
 
+    let latest=null;          // last check_latest result {version, action}
+
     // Detect on launch so the welcome chip is real.
     async function refreshDetect(){
       try{
@@ -635,12 +642,43 @@
       const chip=document.getElementById('welcome-pathchip');
       const lbl=document.getElementById('welcome-path-lbl');
       const pth=document.getElementById('welcome-path');
+      const ver=document.getElementById('welcome-verline');
       if(detected.found){
         if(lbl) lbl.textContent='FiveM found';
         if(pth) pth.textContent=detected.path;
         if(chip) chip.style.display='';
+        if(ver){ ver.style.display=''; ver.textContent='Checking for the latest version…'; }
+        refreshVersionInfo();
       }else{
         if(chip) chip.style.display='none';
+        if(ver){ ver.style.display='none'; ver.textContent=''; }
+      }
+    }
+
+    // Ask the backend what the latest version is and how it compares to what's installed,
+    // then reflect it in the version line + the install button label.
+    async function refreshVersionInfo(){
+      const ver=document.getElementById('welcome-verline');
+      const btn=document.getElementById('install-btn');
+      const installed = detected ? detected.installedVersion : null;
+      try{
+        latest = await invoke('check_latest', { installed });
+      }catch(e){
+        latest = null;
+        if(ver) ver.innerHTML='<span class="warn">Couldn\'t check for the latest version.</span> Installing will use the newest available.';
+        if(btn) btn.textContent = installed ? 'Reinstall' : 'Install';
+        return;
+      }
+      const L = 'v'+latest.version;
+      if(latest.action==='update'){
+        if(ver) ver.innerHTML=`Installed <b>v${installed}</b> → latest <b class="up">${L}</b>`;
+        if(btn) btn.textContent=`Update to ${L}`;
+      }else if(latest.action==='reinstall'){
+        if(ver) ver.innerHTML=`You're on the latest <b>${L}</b>`;
+        if(btn) btn.textContent=`Reinstall ${L}`;
+      }else{ // install
+        if(ver) ver.innerHTML=`Latest <b>${L}</b> · not installed yet`;
+        if(btn) btn.textContent=`Install ${L}`;
       }
     }
 

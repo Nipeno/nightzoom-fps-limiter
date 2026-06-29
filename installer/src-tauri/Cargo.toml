@@ -20,6 +20,8 @@ serde_json = "1"
 # blocking HTTP with rustls (no OpenSSL dependency on the Windows runner)
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 zip = "2"
+# correct version comparison for the install/update/reinstall decision (1.10 > 1.9)
+semver = "1"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"

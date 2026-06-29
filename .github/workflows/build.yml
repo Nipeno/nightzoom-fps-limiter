@@ -39,7 +39,7 @@ jobs:
           "nz_version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Configure (MSVC x64)
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION=$env:nz_version
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION="${{ env.nz_version }}"
 
       - name: Build (Release)
         run: cmake --build build --config Release

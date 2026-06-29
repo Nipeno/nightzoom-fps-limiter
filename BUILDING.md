@@ -103,10 +103,22 @@ pngquant --quality=70-90 --strip --force --output /tmp/logo.png /tmp/logo.png   
 { echo '#pragma once'; echo; xxd -i -n g_logo_png /tmp/logo.png; } > src/logo_data.h
 ```
 
-## Release bundle (CI)
+## CI & release pipeline
 
-Each build also assembles a drag-and-drop bundle for end users. The
-[`build.yml`](.github/workflows/build.yml) workflow, after compiling the addon:
+Three workflows, split so day-to-day pushes only build the component that changed (path
+filters on the triggers), while releases are handled separately so a path filter can never
+gate a tag:
+
+- **[`build.yml`](.github/workflows/build.yml)** — *addon CI*. Runs on changes to `src/**`,
+  `CMakeLists.txt`, `deps/**`, `packaging/**`, `third_party/**`. Compiles the addon and
+  assembles the drag-and-drop bundle as a build **artifact** (`NZ-FPS-Limiter_v0.0.0.zip`).
+- **[`installer.yml`](.github/workflows/installer.yml)** — *installer CI*. Runs on `installer/**`
+  changes. Builds `NZ-Installer.exe` as a build **artifact**.
+- **[`release.yml`](.github/workflows/release.yml)** — *release*. Runs only on a `v*` **tag**
+  (plus `workflow_dispatch` as a dry run). Builds **both** and attaches them to the GitHub
+  Release (`softprops/action-gh-release`, `permissions: contents: write`).
+
+The bundle (built by `build.yml` and `release.yml`):
 
 1. **Resolves the latest ReShade** - scrapes `https://reshade.me/` for
    `ReShade_Setup_<version>_Addon.exe`. If scraping fails (site change / rate-limit), it falls
@@ -116,13 +128,11 @@ Each build also assembles a drag-and-drop bundle for end users. The
    ReShade under from its `plugins` folder).
 3. **Zips** `dxgi.dll` + `NZ-FPS-Limiter.addon64` + `packaging/Enable-ReShade.bat` +
    `packaging/Install Guide.html` + `reshade-version.txt` + the license notices into
-   `NZ-FPS-Limiter_v<addon_version>.zip` (named by the addon's version — see
-   [Versioning](#versioning)).
+   `NZ-FPS-Limiter_v<addon_version>.zip` (release.yml names it by the tag version; build.yml's
+   dev artifact is always `0.0.0`). See [Versioning](#versioning).
 
-Every run uploads that single all-in-one zip as the build artifact. When a `v*` **tag** is
-pushed, it's also attached to the matching GitHub Release (`softprops/action-gh-release`, needs
-`permissions: contents: write`). The end-user install guide lives in `packaging/Install Guide.html` -
-users who already have ReShade just skip the `dxgi.dll` / enable steps (the guide says where).
+The end-user install guide lives in `packaging/Install Guide.html` — users who already have
+ReShade just skip the `dxgi.dll` / enable steps (the guide says where).
 
 ### `Enable-ReShade.bat` (FiveM unblock helper)
 

@@ -1,0 +1,114 @@
+name: Release
+
+# Release pipeline: on a v* tag, build BOTH the addon bundle and the Tauri installer and
+# attach them to the GitHub Release. Kept separate from the dev CI (build.yml / installer.yml)
+# so those can use plain path filters without a path filter ever gating a release.
+# workflow_dispatch is allowed as a dry run (builds both, version 0.0.0, no Release attached).
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # attach assets to the Release
+
+jobs:
+  release:
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Version from the tag (single source of truth) --------------------
+      - name: Resolve addon version
+        run: |
+          # Numeric X.Y.Z only — CMake's project(VERSION) rejects a prerelease suffix.
+          $ver = '0.0.0'
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -match '^v?([0-9]+\.[0-9]+\.[0-9]+)') {
+            $ver = $Matches[1]
+          }
+          Write-Host "Addon version: $ver"
+          "nz_version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # --- Addon -------------------------------------------------------------
+      - name: Configure (MSVC x64)
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION="${{ env.nz_version }}"
+
+      - name: Build addon (Release)
+        run: cmake --build build --config Release
+
+      - name: Resolve + download latest ReShade
+        run: |
+          $fallback = '6.7.3'
+          $ver = $fallback
+          try {
+            $html = (Invoke-WebRequest -Uri 'https://reshade.me/' -UseBasicParsing -UserAgent 'Mozilla/5.0').Content
+            $m = [regex]::Match($html, 'ReShade_Setup_([0-9.]+)_Addon\.exe')
+            if ($m.Success) { $ver = $m.Groups[1].Value }
+          } catch {
+            Write-Host "::warning::Could not scrape reshade.me ($($_.Exception.Message)); using pinned $fallback"
+          }
+          Write-Host "Using ReShade version: $ver"
+          "reshade_version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+          $url = "https://reshade.me/downloads/ReShade_Setup_${ver}_Addon.exe"
+          curl.exe -fL -A 'Mozilla/5.0' -o ReShade_Setup.exe $url
+          7z e ReShade_Setup.exe ReShade64.dll -y
+          if (-not (Test-Path ReShade64.dll) -or ((Get-Item ReShade64.dll).Length -lt 100000)) {
+            Write-Error "ReShade64.dll was not extracted correctly (download may have failed)."
+            exit 1
+          }
+          Copy-Item ReShade64.dll dxgi.dll -Force   # FiveM loads ReShade as dxgi.dll
+
+      - name: Assemble bundle
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          New-Item -ItemType Directory -Force -Path 'dist/Copy-these-into-plugins' | Out-Null
+          Copy-Item build/Release/NZ-FPS-Limiter.addon64 'dist/Copy-these-into-plugins/'
+          Copy-Item dxgi.dll                             'dist/Copy-these-into-plugins/'
+          Copy-Item packaging/Enable-ReShade.bat         'dist/Copy-these-into-plugins/'
+          Copy-Item 'packaging/Install Guide.html'   dist/
+          Copy-Item third_party/ReShade-LICENSE.txt  dist/
+          Copy-Item LICENSE                          dist/LICENSE.txt
+          "$env:reshade_version" | Out-File -FilePath dist/reshade-version.txt -Encoding utf8 -NoNewline
+          $zip = "NZ-FPS-Limiter_v$env:nz_version.zip"
+          Compress-Archive -Path dist/* -DestinationPath $zip -Force
+          "bundle_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # --- Installer ---------------------------------------------------------
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: 'installer/src-tauri -> target'
+
+      - name: Build installer
+        working-directory: installer/src-tauri
+        run: cargo build --release
+
+      - name: Stage exe
+        run: Copy-Item installer/src-tauri/target/release/nz-installer.exe NZ-Installer.exe
+
+      # --- Attach both to the Release (tag pushes only) ---------------------
+      - name: Publish Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: NightZoom FPS Limiter ${{ github.ref_name }}
+          body: |
+            Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
+
+            **Install (recommended):** download **`NZ-Installer.exe`** and run it — it finds FiveM,
+            installs the limiter, and enables ReShade for you.
+
+            **Manual:** download the zip, extract it, and open **`Install Guide.html`**.
+            (It bundles ReShade, so it's all you need.)
+
+            Bundled ReShade: **${{ env.reshade_version }}**.
+
+            💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).
+          files: |
+            ${{ env.bundle_zip }}
+            NZ-Installer.exe

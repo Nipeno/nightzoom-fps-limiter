@@ -1,42 +1,21 @@
 name: Installer
 
-# Builds the Tauri GUI installer (NZ-Installer.exe). Separate from the addon build
-# so addon-only changes don't rebuild Rust. Attaches the exe to the Release on a v* tag.
+# Installer CI: builds the Tauri GUI installer (NZ-Installer.exe) as a build artifact.
+# Dev-only — runs just for installer changes. Releases (v* tags) are built by release.yml.
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]
+    paths:
+      - 'installer/**'
+      - '.github/workflows/installer.yml'
   pull_request:
+    paths:
+      - 'installer/**'
+      - '.github/workflows/installer.yml'
   workflow_dispatch:
 
-permissions:
-  contents: write       # needed to attach the exe to a Release on tag
-  pull-requests: read   # dorny/paths-filter lists changed files via the API on PRs
-
 jobs:
-  # Cheap gate (ubuntu) so the expensive Windows/Rust build only runs when the installer
-  # changed. Gating the job (not the push trigger) keeps v* release tags + manual runs
-  # building unconditionally — a path filter on the trigger would also gate tags.
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      installer: ${{ steps.filter.outputs.installer }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            installer:
-              - 'installer/**'
-              - '.github/workflows/installer.yml'
-
   build:
-    needs: changes
-    if: >-
-      ${{ needs.changes.outputs.installer == 'true'
-          || startsWith(github.ref, 'refs/tags/')
-          || github.event_name == 'workflow_dispatch' }}
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
@@ -61,9 +40,3 @@ jobs:
         with:
           name: NZ-Installer
           path: NZ-Installer.exe
-
-      - name: Attach to Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: NZ-Installer.exe

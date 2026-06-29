@@ -614,6 +614,7 @@
 
     let detected=null;        // last detect_fivem result
     let detecting=false;
+    let manualPath=null;      // folder the user picked via Browse… (remembered across re-detects)
 
     // Map of installing sub-steps -> the .pline rows
     const stepOrder=['download','copy','enable','finish'];
@@ -632,10 +633,11 @@
 
     let latest=null;          // last check_latest result {version, action}
 
-    // Detect on launch so the welcome chip is real.
+    // Detect on launch so the welcome chip is real. Honours a path the user picked via
+    // Browse… (manualPath) so a custom FiveM location survives re-detection.
     async function refreshDetect(){
       try{
-        detected = await invoke('detect_fivem', { manualPath:null });
+        detected = await invoke('detect_fivem', { manualPath });
       }catch(e){ detected = { found:false }; }
       const pcid=document.getElementById('pcid-val');
       if(pcid && detected.reshadeId) pcid.textContent=detected.reshadeId;
@@ -684,9 +686,15 @@
 
     // Install button on the welcome screen
     window.startInstall = async function(){
+      // If we already have a confirmed location (auto-detected or picked via Browse…),
+      // don't bounce through the detecting screen again — go straight to install.
+      if(detected && detected.found){
+        if(detected.existingReshade){ go('existing'); } else { runInstall(true); }
+        return;
+      }
       go('detecting');
       try{
-        detected = await invoke('detect_fivem', { manualPath:null });
+        detected = await invoke('detect_fivem', { manualPath });
       }catch(e){ return showError('notfound'); }
       if(!detected.found){ return showError('notfound'); }
       if(detected.existingReshade){ go('existing'); }
@@ -773,9 +781,10 @@
         const { open } = window.__TAURI__.dialog;
         const dir = await open({ directory:true, title:'Select your FiveM.app folder' });
         if(!dir) return;
-        detected = await invoke('detect_fivem', { manualPath: dir });
-        if(detected.found){ go('welcome'); refreshDetect(); }
-        else { showError('notfound'); }
+        manualPath = dir;                 // remember it so it survives later re-detects
+        await refreshDetect();            // re-detect using manualPath; updates chip + version
+        if(detected && detected.found){ go('welcome'); }
+        else { manualPath = null; showError('notfound'); }
       }catch(e){ /* dialog plugin may be absent; ignore */ }
     }
     // "Change…" on the welcome chip lets the user correct an auto-detected path before installing.

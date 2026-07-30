@@ -9,8 +9,7 @@ one button - turn it on to cap, turn it off to unlock.
 
 > Made by **Nipeno**
 
-<!-- Screenshot of the overlay goes here:
-     ![The NightZoom FPS Limiter overlay](docs/overlay.png) -->
+<img src="docs/overlay.png" alt="The NightZoom FPS Limiter overlay in-game: the NightZoom logo, a &quot;Limit to 60 FPS&quot; checkbox, and buttons linking to the Discord and the source code." width="380">
 
 ## Why 60?
 

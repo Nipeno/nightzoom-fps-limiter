@@ -11,12 +11,14 @@ set(NZ_VERSION "0.0.0" CACHE STRING "NightZoom FPS Limiter version (X.Y.Z)")
 # looks exactly like "the addon is broken" to a player. Must be set before project().
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-project(NZ-FPS-Limiter VERSION ${NZ_VERSION} LANGUAGES CXX RC)
-
-# Windows x64 only.
-if(NOT WIN32)
+# Windows x64 only. Checked against the HOST before project(), because project() enables
+# the RC language and would fail first with a generic "no CMAKE_RC_COMPILER" error
+# elsewhere, burying this explanation.
+if(NOT CMAKE_HOST_WIN32)
     message(FATAL_ERROR "NightZoom FPS Limiter is a Windows x64 ReShade addon and only builds on Windows.")
 endif()
+
+project(NZ-FPS-Limiter VERSION ${NZ_VERSION} LANGUAGES CXX RC)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

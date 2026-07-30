@@ -44,9 +44,6 @@ and to describe how you tested.
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
 (`fix:`, `feat:`, `docs:`, `ci:`, `perf:`, `refactor:`). Branch off `main`.
 
-Note that `installer/tauri-gui` is a separate in-flight branch carrying a Tauri installer GUI. It
-isn't on `main`; if your change targets the installer, base it there.
-
 ## Releases
 
 Maintainer only. Update `CHANGELOG.md`, then push a tag:

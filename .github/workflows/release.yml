@@ -3,7 +3,8 @@ name: Release
 # Release pipeline: on a v* tag, build the addon at that version and attach the
 # end-user bundle to the GitHub Release. Kept separate from the dev CI (build.yml) so
 # only this workflow ever needs write access to the repo.
-# workflow_dispatch is allowed as a dry run (builds at version 0.0.0, publishes nothing).
+# workflow_dispatch is a dry run: it builds and uploads an artifact but never publishes,
+# even when dispatched against a tag ref (the publish step checks the event, not the ref).
 on:
   push:
     tags: [ 'v*' ]
@@ -24,10 +25,17 @@ jobs:
       # --- Version from the tag (single source of truth) --------------------
       - name: Resolve addon version
         run: |
-          # Numeric X.Y.Z only - CMake's project(VERSION) rejects a prerelease suffix.
+          # Plain vX.Y.Z only, anchored at both ends. CMake's project(VERSION) rejects a
+          # prerelease suffix, and an unanchored match would quietly turn v2.3.0-beta.1 into
+          # 2.3.0 - shipping a prerelease under the final version's name. Fail loudly instead.
           $ver = '0.0.0'
-          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -match '^v?([0-9]+\.[0-9]+\.[0-9]+)') {
-            $ver = $Matches[1]
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            if ($env:GITHUB_REF_NAME -match '^v([0-9]+\.[0-9]+\.[0-9]+)$') {
+              $ver = $Matches[1]
+            } else {
+              Write-Error "Tag '$($env:GITHUB_REF_NAME)' is not a plain vX.Y.Z release tag. Refusing to build a release from it."
+              exit 1
+            }
           }
           Write-Host "Addon version: $ver"
           "nz_version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
@@ -82,15 +90,18 @@ jobs:
 
       # --- Dry run: keep the artifact so a manual trigger is still useful ----
       - name: Upload bundle (dry run)
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: NZ-FPS-Limiter-dryrun
           path: ${{ env.bundle_zip }}
 
-      # --- Release (only when a v* tag is pushed) ---------------------------
+      # --- Release (only when a v* tag is PUSHED) ---------------------------
+      # Gated on the event, not just the ref: the Actions UI lets you dispatch this
+      # workflow against a tag, which would otherwise satisfy a ref-only check and
+      # publish a real Release from what is supposed to be a dry run.
       - name: Publish Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           name: NightZoom FPS Limiter ${{ github.ref_name }}

@@ -9,7 +9,6 @@ Closes #
 - [ ] Bug fix
 - [ ] Addon behavior / pacing
 - [ ] CI / release tooling
-- [ ] Installer (Tauri GUI — `installer/tauri-gui` branch, not on `main`)
 - [ ] Docs only
 
 ## Checklist

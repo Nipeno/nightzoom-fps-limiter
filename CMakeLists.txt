@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(NZ-FPS-Limiter LANGUAGES CXX)
+# Addon version. Single source of truth: the git tag vX.Y.Z, which CI passes as
+# -DNZ_VERSION=X.Y.Z. Untagged/local builds fall back to 0.0.0. This flows into the
+# DLL's VERSIONINFO resource (so Windows file properties show a version) and into the
+# overlay's "Version X.Y.Z" label via NZ_VERSION_STR.
+set(NZ_VERSION "0.0.0" CACHE STRING "NightZoom FPS Limiter version (X.Y.Z)")
+
+# Link the CRT statically. This DLL is injected into someone else's game process, so a
+# dependency on the VC++ redist would make it fail to load on PCs that lack it - which
+# looks exactly like "the addon is broken" to a player. Must be set before project().
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+project(NZ-FPS-Limiter VERSION ${NZ_VERSION} LANGUAGES CXX RC)
 
 # Windows x64 only.
 if(NOT WIN32)
@@ -10,7 +21,15 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(NZ-FPS-Limiter SHARED src/main.cpp)
+# Comma-separated form (a.b.c.0) for the binary FILEVERSION/PRODUCTVERSION fields of the
+# VERSIONINFO resource, generated from version.rc.in.
+set(NZ_VERSION_COMMA "${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH},0")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/version.rc.in" "${CMAKE_CURRENT_BINARY_DIR}/version.rc" @ONLY)
+
+add_library(NZ-FPS-Limiter SHARED src/main.cpp "${CMAKE_CURRENT_BINARY_DIR}/version.rc")
+
+# Expose the version string to the C++ source (overlay label).
+target_compile_definitions(NZ-FPS-Limiter PRIVATE NZ_VERSION_STR="${PROJECT_VERSION}")
 
 # ReShade addon SDK header + the matching Dear ImGui declarations (v1.92.5).
 target_include_directories(NZ-FPS-Limiter PRIVATE

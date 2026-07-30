@@ -1,0 +1,59 @@
+# Label manifest for NZ FPS Limiter.
+# Apply with: ./.github/sync-labels.sh   (needs gh CLI, authed, repo cloned)
+# color = 6-hex, no leading '#'.
+
+# --- type ---
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+- name: enhancement
+  color: a2eeef
+  description: New feature or improvement
+- name: docs
+  color: 0075ca
+  description: README / BUILDING / install guides
+- name: question
+  color: d876e3
+  description: Usage / install question
+
+# --- area ---
+- name: area:addon
+  color: 1d76db
+  description: The NZ-FPS-Limiter.addon64 DLL (src/main.cpp)
+- name: area:ci
+  color: 1d76db
+  description: GitHub Actions build / release pipeline
+- name: area:installer
+  color: 1d76db
+  description: Tauri GUI installer (installer/tauri-gui branch)
+- name: area:packaging
+  color: 1d76db
+  description: Zip bundle, Enable-ReShade.bat, install txt
+
+# --- environment ---
+- name: fivem
+  color: c5def5
+  description: FiveM-specific (CitizenFX.ini, plugins path)
+- name: graphics-pack
+  color: c5def5
+  description: NVE / QuantV interaction
+- name: reshade-version
+  color: c5def5
+  description: ReShade / addon API version mismatch
+
+# --- workflow ---
+- name: needs-triage
+  color: ededed
+  description: Not yet reviewed
+- name: needs-info
+  color: fef2c0
+  description: Waiting on reporter
+- name: wontfix
+  color: ffffff
+  description: Out of scope (e.g. configurable cap)
+- name: good first issue
+  color: 7057ff
+  description: Good for newcomers
+- name: blocked-on-tester
+  color: fbca04
+  description: Waiting on real Windows/FiveM verification

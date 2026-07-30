@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Install guide (README)
+    url: https://github.com/Nipeno/nightzoom-fps-limiter#readme
+    about: Read this first — covers the ReShade5 enable step, the overlay key, and VSync.
+  - name: NightZoom Discord
+    url: https://discord.gg/nightzoom
+    about: The NightZoom server's Discord — join here if you're not on the server yet. Add-on bugs and questions belong in Issues.

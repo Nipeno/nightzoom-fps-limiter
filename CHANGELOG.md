@@ -13,17 +13,17 @@ Every release bundles whatever ReShade was latest at build time; the exact versi
 ## [2.4.0] - 2026-07-30
 
 ### Fixed
-- **The add-on now loads on graphics-pack ReShade.** It targeted addon API 18, which requires
-  ReShade 6.6 or newer, so anyone using QuantV or NVE (both ship ReShade 6.3.3) got
+- **The add-on now loads on older ReShade.** It targeted addon API 18, which requires ReShade 6.6 or
+  newer, so anyone on an older install got
   `Failed to register add-on, because the requested API version (18) is not supported (14)` and no
   overlay at all. It now targets **API 11**, so it loads on **any ReShade from 6.1.0 onwards**.
   Nothing about the add-on's behaviour or appearance changes, and users on the newest ReShade are
   unaffected — ReShade accepts any add-on older than itself.
-- The install guide no longer assumes your existing ReShade is called `dxgi.dll`. QuantV installs it
-  as `d3d11.dll`, which meant the "replace your `dxgi.dll`" troubleshooting step quietly did nothing
-  — the old ReShade kept loading first. The guide now says to leave your ReShade alone in the normal
-  case, and if it genuinely does need replacing, to rename the replacement to match whichever file
-  you already have.
+- The install guide no longer assumes your existing ReShade is called `dxgi.dll`. It can be installed
+  under several names (`dxgi.dll`, `d3d11.dll`, `d3d12.dll`, `d3d9.dll`, `opengl32.dll`), which meant
+  the old "replace your `dxgi.dll`" step could quietly do nothing — the existing ReShade kept loading
+  first. The guide now says to leave your ReShade alone in the normal case, and if it genuinely does
+  need replacing, to rename the replacement to match whichever file you already have.
 
 ### Changed
 - Vendored dependencies moved to the ReShade **v6.1.0** SDK headers and ImGui **1.90.4** (`19040`,

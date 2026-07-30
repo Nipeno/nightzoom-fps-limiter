@@ -19,6 +19,12 @@
 //  - The overlay callback draws a dedicated "NightZoom FPS Limiter" window.
 //  - The checkbox state is persisted via ReShade's own config (no custom file).
 
+// ImGui only made ImTextureID default to ImU64 in 1.92. We build against 1.90.4 (19040) so the
+// addon targets ReShade addon API 11 and loads on the older ReShade that graphics packs ship, and
+// there ImTextureID is void* - which g_logo_view.handle (uint64_t) cannot static_cast to. ReShade's
+// overlay header asserts this exact define is present; imgui.h guards its typedef with #ifndef.
+#define ImTextureID ImU64
+
 #include <imgui.h>          // Must be included BEFORE reshade.hpp so the overlay wrappers compile.
 #include <reshade.hpp>
 #include "logo_data.h"      // Embedded NZ-FPS-Limiter_logo.png bytes (g_logo_png / g_logo_png_len)

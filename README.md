@@ -50,9 +50,14 @@ inside the add-on too.
 
 ## Troubleshooting
 
-The **Troubleshooting** sections of the bundled `Install Guide.html` cover the common ones -
-the overlay not opening (try both **Home** and **Insert**; NVE remaps the key), and an older
-graphics-pack ReShade refusing to load the add-on.
+Already have ReShade from a graphics pack like NVE or QuantV? **Just add the add-on and change
+nothing else.** It works with any ReShade from **6.1 onwards**, so there's no need to replace your
+pack's ReShade — and note that it isn't always named `dxgi.dll` (QuantV installs it as
+`d3d11.dll`, for instance).
+
+The **Troubleshooting** sections of the bundled `Install Guide.html` cover the rest - the overlay
+not opening (try both **Home** and **Insert**; NVE remaps the key), and what to do in the rare case
+your ReShade predates 6.1.
 
 One that catches people out: **turn off VSync in-game.** The limiter and VSync both wait for
 their own timing, and running them together can stack those waits into stutter or an effective

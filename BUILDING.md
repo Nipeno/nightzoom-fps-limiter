@@ -46,13 +46,17 @@ static.
 Only the headers needed to compile are vendored under `deps/` - not the full ReShade source:
 
 - **`deps/reshade/`** - addon SDK headers from [crosire/reshade](https://github.com/crosire/reshade),
-  tag **v6.7.3** (addon **API version 18**).
+  tag **v6.1.0** (addon **API version 11**). Deliberately old - see [Compatibility](#compatibility).
 - **`deps/imgui/`** - `imgui.h` + `imconfig.h` from the **docking branch** of
-  [ocornut/imgui](https://github.com/ocornut/imgui) at the exact commit ReShade pins
-  (`3912b3d`, `IMGUI_VERSION_NUM 19250`). The docking branch is required: the ReShade overlay
-  header uses docking-only types (`ImGuiDockNodeFlags`, `ImGuiWindowClass`). Only declarations
-  are needed - the addon calls ReShade's bundled ImGui at runtime through the function table,
-  so no ImGui `.cpp` is compiled.
+  [ocornut/imgui](https://github.com/ocornut/imgui) at the exact commit ReShade v6.1.0 pins
+  (`c6aa051`, ImGui 1.90.4, `IMGUI_VERSION_NUM 19040`). The docking branch is required: the ReShade
+  overlay header uses docking-only types (`ImGuiDockNodeFlags`, `ImGuiWindowClass`). Only
+  declarations are needed - the addon calls ReShade's bundled ImGui at runtime through the function
+  table, so no ImGui `.cpp` is compiled.
+
+`src/main.cpp` defines `ImTextureID ImU64` before including `imgui.h`. ImGui only made that the
+default in 1.92; at 1.90.4 it is `void*`, which `g_logo_view.handle` (a `uint64_t`) cannot be
+`static_cast` to. ReShade's overlay header has a `static_assert` demanding exactly this define.
 
 Everything else is Windows system libraries: `winmm` (timer granularity), `shell32`
 (open links), `windowscodecs` + `ole32` (WIC, to decode the embedded logo).
@@ -60,13 +64,13 @@ Everything else is Windows system libraries: `winmm` (timer granularity), `shell
 ### Refreshing the vendored headers
 
 ```sh
-RESHADE_REF=v6.7.3   # addon API version 18
+RESHADE_REF=v6.1.0   # addon API version 11
 for f in reshade.hpp reshade_api.hpp reshade_api_device.hpp reshade_api_format.hpp \
          reshade_api_pipeline.hpp reshade_api_resource.hpp reshade_events.hpp reshade_overlay.hpp; do
   curl -fsSL -o "deps/reshade/$f" "https://raw.githubusercontent.com/crosire/reshade/$RESHADE_REF/include/$f"
 done
 
-IMGUI_SHA=3912b3d9a9c1b3f17431aebafd86d2f40ee6e59c   # must match IMGUI_VERSION_NUM in reshade_overlay.hpp
+IMGUI_SHA=c6aa051629753f0ef0d26bf775a8b6a92aa213b2   # must match IMGUI_VERSION_NUM in reshade_overlay.hpp
 for f in imgui.h imconfig.h; do
   curl -fsSL -o "deps/imgui/$f" "https://raw.githubusercontent.com/ocornut/imgui/$IMGUI_SHA/$f"
 done
@@ -74,11 +78,26 @@ done
 
 ## Compatibility
 
-A ReShade addon must target an API version **≤** the ReShade build it loads into - ReShade
-loads older addons but refuses newer ones. This addon is built against **API 18** (ReShade
-**v6.6.0 – v6.7.3**). If ReShade refuses to load it with a message like
-`requested API version (X) is not supported (Y)`, either update ReShade or rebuild against the
-matching `deps/reshade` tag (see refresh steps above).
+A ReShade addon must target an API version **≤** the ReShade build it loads into - ReShade loads
+older addons but refuses newer ones (`api_version > RESHADE_API_VERSION` is the only rejection;
+anything older is accepted, all the way down to API 1).
+
+So the SDK pin is a **compatibility floor, and lower is better**. This addon targets **API 11**,
+which means it loads on **ReShade 6.1.0 and everything newer**. That is deliberate: graphics packs
+ship old ReShade - QuantV and NVE pin **6.3.3 (API 14)** - and an addon built against the newest SDK
+(API 18, ReShade 6.6+) is rejected outright for every one of those users.
+
+Targeting an old SDK does **not** penalise users on current ReShade. `ReShadeGetImGuiFunctionTable()`
+in the latest builds still serves the older ImGui tables (18600, 18971, 19000, **19040**, 19180,
+19191, 19222, 19250), so a 19040-built addon works on 6.7.3 and later just as well.
+
+APIs 11-14 all share the same ImGui pin (19040), so API 11 costs nothing over API 14 while covering
+three more ReShade releases. **API 8** (ReShade 5.9, ImGui 18971) is the true floor before
+`get_config_value` has to be renamed to `config_get_value`; we stop at 11 because the extra reach
+is negligible.
+
+If ReShade still refuses to load the addon with `requested API version (X) is not supported (Y)`,
+that user's ReShade predates 6.1 and needs updating.
 
 ## How it works
 
@@ -163,7 +182,7 @@ gh release view vX.Y.Z --repo Nipeno/nightzoom-fps-limiter --json assets
 ```
 
 > The bundle carries whatever ReShade was latest at release time. Because ReShade loads addons
-> with an API version ≤ its own, bundling a newer ReShade never breaks this addon (API 18).
+> with an API version ≤ its own, bundling a newer ReShade never breaks this addon (API 11).
 
 ## Third-party licenses
 

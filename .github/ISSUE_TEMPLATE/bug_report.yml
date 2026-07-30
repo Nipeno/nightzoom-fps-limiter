@@ -39,7 +39,7 @@ body:
     id: reshade-version
     attributes:
       label: ReShade version
-      description: Shown top-left of the ReShade overlay when you open it.
+      description: Shown on "About" tab of the ReShade overlay when you open it.
       placeholder: e.g. 6.7.3
     validations:
       required: false

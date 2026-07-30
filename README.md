@@ -71,7 +71,7 @@ place to get onto the server, not the place to report add-on bugs.
 ## Credits
 
 - Developer: **Nipeno**
-- Testers: **Beanz**, **Cenkov**, **PhatWraith**, **krispy lzz**, **Wraith**
+- Testers: **Beanz**, **Cenkov**, **PhatWraith**, **krispy lzz**, **Wraith**, **hachiro**
 
 ## For developers
 

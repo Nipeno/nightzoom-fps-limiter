@@ -140,9 +140,9 @@
         <p class="ttl">Already have ReShade? <span class="note" style="font-weight:400">(NVE, QuantV, other graphics pack)</span></p>
         Don't drag <code>dxgi.dll</code> - that <b>is</b> ReShade, and you already have it. Just drag the
         other two files and leave your existing ReShade completely alone.
-        <p class="note" style="margin-top:8px">Your graphics pack's ReShade may be named
-        <code>d3d11.dll</code> or something else rather than <code>dxgi.dll</code> - that's normal, and you
-        don't need to touch it either way.</p>
+        <p class="note" style="margin-top:8px">ReShade can be installed under a few different file names
+        (<code>dxgi.dll</code>, <code>d3d11.dll</code> and others) - whichever yours uses, you don't need
+        to touch it.</p>
       </div>
       <p class="note">Drag the <b>files</b> themselves, not the folder - all three should sit
       <b>directly</b> inside the plugins folder, not inside a sub-folder.</p>
@@ -174,24 +174,25 @@
 
   <h2>Already have ReShade but don't see the window?</h2>
   <p>Good news: you almost certainly <b>don't need to replace anything</b>. This add-on works with any
-  ReShade from <b>6.1 onwards</b>, which covers the versions NVE, QuantV and other graphics packs ship.
-  Just make sure <code>NZ-FPS-Limiter.addon64</code> is sitting in your plugins folder and leave the rest
-  of your setup exactly as it is.</p>
+  ReShade from <b>6.1 onwards</b>, which covers current graphics packs. Just make sure
+  <code>NZ-FPS-Limiter.addon64</code> is sitting in your plugins folder and leave the rest of your setup
+  exactly as it is.</p>
   <p>If the <b>"NightZoom FPS Limiter"</b> window still doesn't show up, first make sure you tried
   <kbd>Home</kbd> <i>and</i> <kbd>Insert</kbd>, then open <code>ReShade.log</code> in your
   <code>FiveM.app</code> folder and look near the top for a line like:</p>
   <pre>Failed to register add-on, because the requested API version (11) is not supported (N)!</pre>
-  <p>That means your ReShade is older than 6.1 and needs updating. <b>Important:</b> ReShade isn't always
-  called <code>dxgi.dll</code> - depending on how your graphics pack installed it, the file may be named
-  <code>dxgi.dll</code>, <code>d3d11.dll</code>, <code>d3d12.dll</code>, <code>d3d9.dll</code> or
-  <code>opengl32.dll</code>. Look in your plugins folder to see which one you have.</p>
-  <p><b>Fix:</b> take the zip's <code>dxgi.dll</code> (from the <b>Copy-these-into-plugins</b> folder),
-  copy it into your plugins folder and <b>rename it to match the file you already have</b> - replacing it.
-  Renaming matters: dropping in a <code>dxgi.dll</code> next to an existing <code>d3d11.dll</code> does
+  <p>That means your ReShade is older than 6.1. The best fix is to <b>update your graphics pack</b> -
+  current versions ship a recent ReShade, and that keeps everything else about your setup intact.</p>
+  <p>If you'd rather update ReShade by hand: <b>Important</b> - ReShade isn't always called
+  <code>dxgi.dll</code>. Depending on how it was installed the file may be named <code>dxgi.dll</code>,
+  <code>d3d11.dll</code>, <code>d3d12.dll</code>, <code>d3d9.dll</code> or <code>opengl32.dll</code>.
+  Look in your plugins folder to see which one you have.</p>
+  <p>Then take the zip's <code>dxgi.dll</code> (from the <b>Copy-these-into-plugins</b> folder), copy it
+  into your plugins folder and <b>rename it to match the file you already have</b>, replacing it.
+  Renaming matters: dropping a <code>dxgi.dll</code> next to an existing <code>d3d11.dll</code> does
   nothing, because the old one still loads first. It's the latest official ReShade and still runs
-  NVE / QuantV fine.</p>
-  <p class="note">Back up the file you're replacing first, so you can put it back if your graphics pack
-  misbehaves.</p>
+  graphics packs fine.</p>
+  <p class="note">Back up the file you're replacing first, so you can put it back if anything misbehaves.</p>
 
   <h2 id="manual">If the .bat can't find FiveM <span class="note" style="font-weight:400">(manual allow)</span></h2>
   <p>Only needed if <code>Enable-ReShade.bat</code> couldn't locate FiveM. The first time you launch with
@@ -227,8 +228,8 @@ ReShade5=ID:xxxxxxxx acknowledged that ReShade 5.x has a bug that will lead to g
     <li>Open <code>%localappdata%\FiveM\FiveM.app\plugins</code>.</li>
     <li>Delete <b>NZ-FPS-Limiter.addon64</b>.</li>
     <li>Only if you installed ReShade <b>just</b> for this and want it gone too, also delete the ReShade
-    file you added - <code>dxgi.dll</code> if you used our zip. If a graphics pack (NVE / QuantV) put
-    ReShade there (it may be named <code>d3d11.dll</code> or similar), <b>leave it alone</b>.</li>
+    file you added - <code>dxgi.dll</code> if you used our zip. If a graphics pack put ReShade there
+    (under whatever name), <b>leave it alone</b>.</li>
   </ol>
 
   <footer>

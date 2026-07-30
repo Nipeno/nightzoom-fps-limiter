@@ -17,8 +17,8 @@ calls.
 **Version pins move together.** The ReShade SDK headers and the Dear ImGui headers must match:
 SDK **v6.1.0** = addon **API 11**, paired with the **docking branch** of ImGui at
 `IMGUI_VERSION_NUM 19040`. The old SDK is deliberate — it is the compatibility floor, and lower
-means the addon loads on more ReShade builds (graphics packs ship 6.3.3). Don't "modernise" the
-pins. `reshade_overlay.hpp` has an `#error` that fires if the ImGui version
+means the addon loads on more ReShade builds, and plenty of users run an older one. Don't
+"modernise" the pins. `reshade_overlay.hpp` has an `#error` that fires if the ImGui version
 doesn't match exactly, and the release-branch ImGui headers won't work at all because the overlay
 uses docking-only types. [BUILDING.md](BUILDING.md) has the refresh commands.
 

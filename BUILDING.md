@@ -83,9 +83,10 @@ older addons but refuses newer ones (`api_version > RESHADE_API_VERSION` is the 
 anything older is accepted, all the way down to API 1).
 
 So the SDK pin is a **compatibility floor, and lower is better**. This addon targets **API 11**,
-which means it loads on **ReShade 6.1.0 and everything newer**. That is deliberate: graphics packs
-ship old ReShade - QuantV and NVE pin **6.3.3 (API 14)** - and an addon built against the newest SDK
-(API 18, ReShade 6.6+) is rejected outright for every one of those users.
+which means it loads on **ReShade 6.1.0 and everything newer**. That is deliberate: plenty of users
+run an older ReShade than the current release - typically because their graphics pack install is a
+few versions behind - and an addon built against the newest SDK (API 18, ReShade 6.6+) is rejected
+outright for all of them. Targeting low costs us nothing and removes that whole failure mode.
 
 Targeting an old SDK does **not** penalise users on current ReShade. `ReShadeGetImGuiFunctionTable()`
 in the latest builds still serves the older ImGui tables (18600, 18971, 19000, **19040**, 19180,

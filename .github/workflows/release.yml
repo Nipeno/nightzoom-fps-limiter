@@ -104,7 +104,7 @@ jobs:
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          name: NightZoom FPS Limiter ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           generate_release_notes: true
           body: |
             Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.

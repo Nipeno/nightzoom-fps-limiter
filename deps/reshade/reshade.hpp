@@ -8,9 +8,10 @@
 #include "reshade_events.hpp"
 #include "reshade_overlay.hpp"
 #include <charconv>
+#include <Windows.h>
 
 // Current version of the ReShade API
-#define RESHADE_API_VERSION 18
+#define RESHADE_API_VERSION 11
 
 // Optionally import ReShade API functions when 'RESHADE_API_LIBRARY' is defined instead of using header-only mode
 #if defined(RESHADE_API_LIBRARY) || defined(RESHADE_API_LIBRARY_EXPORT)
@@ -22,26 +23,21 @@
 	#define RESHADE_API_LIBRARY_DECL extern "C" __declspec(dllimport)
 #endif
 
-RESHADE_API_LIBRARY_DECL void ReShadeLogMessage(void *module, int level, const char *message);
+RESHADE_API_LIBRARY_DECL void ReShadeLogMessage(HMODULE module, int level, const char *message);
 
 RESHADE_API_LIBRARY_DECL void ReShadeGetBasePath(char *path, size_t *path_size);
 
-RESHADE_API_LIBRARY_DECL bool ReShadeGetConfigValue(void *module, reshade::api::effect_runtime *runtime, const char *section, const char *key, char *value, size_t *value_size);
-RESHADE_API_LIBRARY_DECL void ReShadeSetConfigValue(void *module, reshade::api::effect_runtime *runtime, const char *section, const char *key, const char *value);
-RESHADE_API_LIBRARY_DECL void ReShadeSetConfigArray(void *module, reshade::api::effect_runtime *runtime, const char *section, const char *key, const char *value, size_t value_size);
+RESHADE_API_LIBRARY_DECL bool ReShadeGetConfigValue(HMODULE module, reshade::api::effect_runtime *runtime, const char *section, const char *key, char *value, size_t *value_size);
+RESHADE_API_LIBRARY_DECL void ReShadeSetConfigValue(HMODULE module, reshade::api::effect_runtime *runtime, const char *section, const char *key, const char *value);
 
-RESHADE_API_LIBRARY_DECL bool ReShadeRegisterAddon(void *module, uint32_t api_version);
-RESHADE_API_LIBRARY_DECL void ReShadeUnregisterAddon(void *module);
+RESHADE_API_LIBRARY_DECL bool ReShadeRegisterAddon(HMODULE module, uint32_t api_version);
+RESHADE_API_LIBRARY_DECL void ReShadeUnregisterAddon(HMODULE module);
 
 RESHADE_API_LIBRARY_DECL void ReShadeRegisterEvent(reshade::addon_event ev, void *callback);
-RESHADE_API_LIBRARY_DECL void ReShadeRegisterEventForAddon(void *module, reshade::addon_event ev, void *callback);
 RESHADE_API_LIBRARY_DECL void ReShadeUnregisterEvent(reshade::addon_event ev, void *callback);
-RESHADE_API_LIBRARY_DECL void ReShadeUnregisterEventForAddon(void *module, reshade::addon_event ev, void *callback);
 
 RESHADE_API_LIBRARY_DECL void ReShadeRegisterOverlay(const char *title, void(*callback)(reshade::api::effect_runtime *runtime));
-RESHADE_API_LIBRARY_DECL void ReShadeRegisterOverlayForAddon(void *module, const char *title, void(*callback)(reshade::api::effect_runtime *runtime));
 RESHADE_API_LIBRARY_DECL void ReShadeUnregisterOverlay(const char *title, void(*callback)(reshade::api::effect_runtime *runtime));
-RESHADE_API_LIBRARY_DECL void ReShadeUnregisterOverlayForAddon(void *module, const char *title, void(*callback)(reshade::api::effect_runtime *runtime));
 
 RESHADE_API_LIBRARY_DECL bool ReShadeCreateEffectRuntime(reshade::api::device_api api, void *opaque_device, void *opaque_command_queue, void *opaque_swapchain, const char *config_path, reshade::api::effect_runtime **out_runtime);
 RESHADE_API_LIBRARY_DECL void ReShadeDestroyEffectRuntime(reshade::api::effect_runtime *runtime);
@@ -49,19 +45,17 @@ RESHADE_API_LIBRARY_DECL void ReShadeUpdateAndPresentEffectRuntime(reshade::api:
 
 #else
 
-#include <Windows.h>
-
 // Use the kernel32 variant of module enumeration functions so it can be safely called from 'DllMain'
 extern "C" BOOL WINAPI K32EnumProcessModules(HANDLE hProcess, HMODULE *lphModule, DWORD cb, LPDWORD lpcbNeeded);
 
-namespace reshade::internal
+namespace reshade { namespace internal
 {
 	/// <summary>
 	/// Gets the handle to the ReShade module.
 	/// </summary>
-	inline HMODULE get_reshade_module_handle(HMODULE initial_handle = nullptr)
+	inline HMODULE get_reshade_module_handle(HMODULE reshade_module = nullptr)
 	{
-		static HMODULE handle = initial_handle;
+		static HMODULE handle = reshade_module;
 		if (handle == nullptr)
 		{
 			HMODULE modules[1024]; DWORD num = 0;
@@ -87,60 +81,55 @@ namespace reshade::internal
 	/// <summary>
 	/// Gets the handle to the current add-on module.
 	/// </summary>
-	inline HMODULE get_current_module_handle(HMODULE initial_handle = nullptr)
+	inline HMODULE get_current_module_handle(HMODULE addon_module = nullptr)
 	{
-		static HMODULE handle = initial_handle;
+		static HMODULE handle = addon_module;
 		return handle;
 	}
-}
+} }
 
 #endif
 
 namespace reshade
 {
-#if !defined(RESHADE_API_LIBRARY_EXPORT) || defined(BUILTIN_ADDON)
-	namespace log
+	/// <summary>
+	/// Available log severity levels.
+	/// </summary>
+	enum class log_level
 	{
 		/// <summary>
-		/// Severity levels for logging.
+		/// | [ERROR] | ...
 		/// </summary>
-		enum class level
-		{
-			/// <summary>
-			/// | ERROR | ...
-			/// </summary>
-			error = 1,
-			/// <summary>
-			/// | WARN  | ...
-			/// </summary>
-			warning = 2,
-			/// <summary>
-			/// | INFO  | ...
-			/// </summary>
-			info = 3,
-			/// <summary>
-			/// | DEBUG | ...
-			/// </summary>
-			debug = 4,
-		};
-
+		error = 1,
 		/// <summary>
-		/// Writes a message to ReShade's log.
+		/// | [WARN]  | ...
 		/// </summary>
-		/// <param name="level">Severity level.</param>
-		/// <param name="message">A null-terminated message string.</param>
-		inline void message(level level, const char *message)
-		{
+		warning = 2,
+		/// <summary>
+		/// | [INFO]  | ...
+		/// </summary>
+		info = 3,
+		/// <summary>
+		/// | [DEBUG] | ...
+		/// </summary>
+		debug = 4
+	};
+
+	/// <summary>
+	/// Writes a message to ReShade's log.
+	/// </summary>
+	/// <param name="level">Severity level.</param>
+	/// <param name="message">A null-terminated message string.</param>
+	inline void log_message(log_level level, const char *message)
+	{
 #if defined(RESHADE_API_LIBRARY)
-			ReShadeLogMessage(nullptr, static_cast<int>(level), message);
+		ReShadeLogMessage(nullptr, static_cast<int>(level), message);
 #else
-			static const auto func = reinterpret_cast<void(*)(void *, int, const char *)>(
-				GetProcAddress(internal::get_reshade_module_handle(), "ReShadeLogMessage"));
-			func(internal::get_current_module_handle(), static_cast<int>(level), message);
+		static const auto func = reinterpret_cast<void(*)(HMODULE, int, const char *)>(
+			GetProcAddress(internal::get_reshade_module_handle(), "ReShadeLogMessage"));
+		func(internal::get_current_module_handle(), static_cast<int>(level), message);
 #endif
-		}
 	}
-#endif
 
 	/// <summary>
 	/// Gets the base path ReShade uses to resolve relative paths.
@@ -173,12 +162,12 @@ namespace reshade
 #if defined(RESHADE_API_LIBRARY)
 		return ReShadeGetConfigValue(nullptr, runtime, section, key, value, value_size);
 #else
-		static const auto func = reinterpret_cast<bool(*)(void *, api::effect_runtime *, const char *, const char *, char *, size_t *)>(
+		static const auto func = reinterpret_cast<bool(*)(HMODULE, api::effect_runtime *, const char *, const char *, char *, size_t *)>(
 			GetProcAddress(internal::get_reshade_module_handle(), "ReShadeGetConfigValue"));
 		return func(internal::get_current_module_handle(), runtime, section, key, value, value_size);
 #endif
 	}
-#if _HAS_CXX17 || __cplusplus >= 201703L
+#if _HAS_CXX17
 	template <typename T>
 	inline bool get_config_value(api::effect_runtime *runtime, const char *section, const char *key, T &value)
 	{
@@ -211,12 +200,12 @@ namespace reshade
 #if defined(RESHADE_API_LIBRARY)
 		ReShadeSetConfigValue(nullptr, runtime, section, key, value);
 #else
-		static const auto func = reinterpret_cast<void(*)(void *, api::effect_runtime *, const char *, const char *, const char *)>(
+		static const auto func = reinterpret_cast<void(*)(HMODULE, api::effect_runtime *, const char *, const char *, const char *)>(
 			GetProcAddress(internal::get_reshade_module_handle(), "ReShadeSetConfigValue"));
 		func(internal::get_current_module_handle(), runtime, section, key, value);
 #endif
 	}
-#if _HAS_CXX17 || __cplusplus >= 201703L
+#if _HAS_CXX17
 	template <typename T>
 	inline void set_config_value(api::effect_runtime *runtime, const char *section, const char *key, const T &value)
 	{
@@ -230,16 +219,6 @@ namespace reshade
 		set_config_value<int>(runtime, section, key, value ? 1 : 0);
 	}
 #endif
-	inline void set_config_value(api::effect_runtime *runtime, const char *section, const char *key, const char *value, size_t value_size)
-	{
-#if defined(RESHADE_API_LIBRARY)
-		ReShadeSetConfigArray(nullptr, runtime, section, key, value, value_size);
-#else
-		static const auto func = reinterpret_cast<void(*)(void *, api::effect_runtime *, const char *, const char *, const char *, size_t)>(
-			GetProcAddress(internal::get_reshade_module_handle(), "ReShadeSetConfigArray"));
-		func(internal::get_current_module_handle(), runtime, section, key, value, value_size);
-#endif
-	}
 
 	/// <summary>
 	/// Registers this module as an add-on with ReShade.
@@ -247,26 +226,26 @@ namespace reshade
 	/// </summary>
 	/// <param name="addon_module">Handle of the current module.</param>
 	/// <param name="reshade_module">Handle of the ReShade module in the process, or <see langword="nullptr"/> to find it automatically.</param>
-	inline bool register_addon(void *addon_module, [[maybe_unused]] void *reshade_module = nullptr)
+	inline bool register_addon(HMODULE addon_module, [[maybe_unused]] HMODULE reshade_module = nullptr)
 	{
 #if defined(RESHADE_API_LIBRARY)
 		return ReShadeRegisterAddon(addon_module, RESHADE_API_VERSION);
 #else
-		addon_module = internal::get_current_module_handle(static_cast<HMODULE>(addon_module));
-		reshade_module = internal::get_reshade_module_handle(static_cast<HMODULE>(reshade_module));
+		addon_module = internal::get_current_module_handle(addon_module);
+		reshade_module = internal::get_reshade_module_handle(reshade_module);
 
 		if (reshade_module == nullptr)
 			return false;
 
-		const auto func = reinterpret_cast<bool(*)(void *, uint32_t)>(
-			GetProcAddress(static_cast<HMODULE>(reshade_module), "ReShadeRegisterAddon"));
+		const auto func = reinterpret_cast<bool(*)(HMODULE, uint32_t)>(
+			GetProcAddress(reshade_module, "ReShadeRegisterAddon"));
 		// Check that the ReShade module supports the used API
 		if (func == nullptr || !func(addon_module, RESHADE_API_VERSION))
 			return false;
 
 #if defined(IMGUI_VERSION_NUM)
 		const auto imgui_func = reinterpret_cast<const imgui_function_table *(*)(uint32_t)>(
-			GetProcAddress(static_cast<HMODULE>(reshade_module), "ReShadeGetImGuiFunctionTable"));
+			GetProcAddress(reshade_module, "ReShadeGetImGuiFunctionTable"));
 		// Check that the ReShade module was built with Dear ImGui support and supports the used version
 		if (imgui_func == nullptr || !(imgui_function_table_instance() = imgui_func(IMGUI_VERSION_NUM)))
 			return false;
@@ -281,19 +260,19 @@ namespace reshade
 	/// </summary>
 	/// <param name="addon_module">Handle of the current module.</param>
 	/// <param name="reshade_module">Handle of the ReShade module in the process, or <see langword="nullptr"/> to find it automatically.</param>
-	inline void unregister_addon(void *addon_module, [[maybe_unused]] void *reshade_module = nullptr)
+	inline void unregister_addon(HMODULE addon_module, [[maybe_unused]] HMODULE reshade_module = nullptr)
 	{
 #if defined(RESHADE_API_LIBRARY)
 		ReShadeUnregisterAddon(addon_module);
 #else
-		addon_module = internal::get_current_module_handle(static_cast<HMODULE>(addon_module));
-		reshade_module = internal::get_reshade_module_handle(static_cast<HMODULE>(reshade_module));
+		addon_module = internal::get_current_module_handle(addon_module);
+		reshade_module = internal::get_reshade_module_handle(reshade_module);
 
 		if (reshade_module == nullptr)
 			return;
 
-		const auto func = reinterpret_cast<bool(*)(void *)>(
-			GetProcAddress(static_cast<HMODULE>(reshade_module), "ReShadeUnregisterAddon"));
+		const auto func = reinterpret_cast<bool(*)(HMODULE)>(
+			GetProcAddress(reshade_module, "ReShadeUnregisterAddon"));
 		if (func != nullptr)
 			func(addon_module);
 #endif
@@ -314,7 +293,7 @@ namespace reshade
 		static const auto func = reinterpret_cast<void(*)(addon_event, void *)>(
 			GetProcAddress(internal::get_reshade_module_handle(), "ReShadeRegisterEvent"));
 		if (func != nullptr)
-			func(ev, reinterpret_cast<void *>(callback));
+			func(ev, static_cast<void *>(callback));
 #endif
 	}
 	/// <summary>
@@ -331,7 +310,7 @@ namespace reshade
 		static const auto func = reinterpret_cast<void(*)(addon_event, void *)>(
 			GetProcAddress(internal::get_reshade_module_handle(), "ReShadeUnregisterEvent"));
 		if (func != nullptr)
-			func(ev, reinterpret_cast<void *>(callback));
+			func(ev, static_cast<void *>(callback));
 #endif
 	}
 

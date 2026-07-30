@@ -6,12 +6,11 @@
 #pragma once
 
 #include "reshade_api_resource.hpp"
-#include <cstddef>
 
-namespace reshade::api
+namespace reshade { namespace api
 {
 	/// <summary>
-	/// Flags that specify the shader stages in the render pipeline.
+	/// A list of flags that represent the available shader stages in the render pipeline.
 	/// </summary>
 	enum class shader_stage : uint32_t
 	{
@@ -40,7 +39,7 @@ namespace reshade::api
 	RESHADE_DEFINE_ENUM_FLAG_OPERATORS(shader_stage);
 
 	/// <summary>
-	/// Flags that specify the pipeline stages in the render pipeline.
+	/// A list of flags that represent the available pipeline stages in the render pipeline.
 	/// </summary>
 	enum class pipeline_stage : uint32_t
 	{
@@ -71,7 +70,7 @@ namespace reshade::api
 	RESHADE_DEFINE_ENUM_FLAG_OPERATORS(pipeline_stage);
 
 	/// <summary>
-	/// Type of a descriptor.
+	/// The available descriptor types.
 	/// </summary>
 	enum class descriptor_type : uint32_t
 	{
@@ -84,14 +83,6 @@ namespace reshade::api
 		/// </summary>
 		sampler_with_resource_view = 1,
 		/// <summary>
-		/// Descriptors are either of type <see cref="buffer_shader_resource_view"/> or <see cref="texture_shader_resource_view"/>.
-		/// </summary>
-		shader_resource_view = 2,
-		/// <summary>
-		/// Descriptors are either of type <see cref="buffer_unordered_access_view"/> or <see cref="texture_unordered_access_view"/>.
-		/// </summary>
-		unordered_access_view = 3,
-		/// <summary>
 		/// Descriptors are an array of <see cref="resource_view"/>.
 		/// </summary>
 		buffer_shader_resource_view = 4,
@@ -102,11 +93,13 @@ namespace reshade::api
 		/// <summary>
 		/// Descriptors are an array of <see cref="resource_view"/>.
 		/// </summary>
-		texture_shader_resource_view = shader_resource_view,
+		texture_shader_resource_view = 2,
+		shader_resource_view = texture_shader_resource_view,
 		/// <summary>
 		/// Descriptors are an array of <see cref="resource_view"/>.
 		/// </summary>
-		texture_unordered_access_view = unordered_access_view,
+		texture_unordered_access_view = 3,
+		unordered_access_view = texture_unordered_access_view,
 		/// <summary>
 		/// Descriptors are an array of <see cref="buffer_range"/>.
 		/// </summary>
@@ -116,22 +109,20 @@ namespace reshade::api
 		/// </summary>
 		shader_storage_buffer = 7,
 		/// <summary>
-		/// Descriptors are an array of <see cref="resource_view"/>.
+		/// Descriptors are an array of <see cref="acceleration_structure"/>.
 		/// </summary>
-		acceleration_structure = 10
+		acceleration_structure = 8
 	};
 
 	/// <summary>
-	/// Type of a pipeline layout parameter.
+	/// The available pipeline layout parameter types.
 	/// </summary>
 	enum class pipeline_layout_param_type : uint32_t
 	{
 		push_constants = 1,
 		descriptor_table = 0,
-		descriptor_table_with_static_samplers = 4,
 		push_descriptors = 2,
-		push_descriptors_with_ranges = 3,
-		push_descriptors_with_static_samplers = 5
+		push_descriptors_with_ranges = 3
 	};
 
 	/// <summary>
@@ -141,7 +132,6 @@ namespace reshade::api
 	{
 		/// <summary>
 		/// OpenGL uniform buffer binding index.
-		/// In Vulkan this is equivalent to an offset for the range (in 32-bit values).
 		/// </summary>
 		uint32_t binding = 0;
 		/// <summary>
@@ -200,13 +190,6 @@ namespace reshade::api
 		/// </summary>
 		descriptor_type type = descriptor_type::sampler;
 	};
-	struct descriptor_range_with_static_samplers : public descriptor_range
-	{
-		/// <summary>
-		/// Optional array of sampler descriptions to statically embed into the descriptor table when the descriptor type is <see cref="descriptor_type::sampler"/> or <see cref="descriptor_type::sampler_with_resource_view"/>.
-		/// </summary>
-		const sampler_desc *static_samplers = nullptr;
-	};
 
 	/// <summary>
 	/// Describes a single parameter in a pipeline layout.
@@ -216,9 +199,7 @@ namespace reshade::api
 		constexpr pipeline_layout_param() : push_descriptors() {}
 		constexpr pipeline_layout_param(const constant_range &push_constants) : type(pipeline_layout_param_type::push_constants), push_constants(push_constants) {}
 		constexpr pipeline_layout_param(const descriptor_range &push_descriptors) : type(pipeline_layout_param_type::push_descriptors), push_descriptors(push_descriptors) {}
-		constexpr pipeline_layout_param(const descriptor_range_with_static_samplers &push_descriptors) : type(pipeline_layout_param_type::push_descriptors_with_static_samplers), descriptor_table_with_static_samplers({ 1, &push_descriptors }) {}
 		constexpr pipeline_layout_param(uint32_t count, const descriptor_range *ranges) : type(pipeline_layout_param_type::descriptor_table), descriptor_table({ count, ranges }) {}
-		constexpr pipeline_layout_param(uint32_t count, const descriptor_range_with_static_samplers *ranges) : type(pipeline_layout_param_type::descriptor_table_with_static_samplers), descriptor_table_with_static_samplers({ count, ranges }) {}
 
 		/// <summary>
 		/// Type of the parameter.
@@ -245,36 +226,17 @@ namespace reshade::api
 				uint32_t count;
 				const descriptor_range *ranges;
 			} descriptor_table;
-
-			/// <summary>
-			/// Used when parameter type is <see cref="pipeline_layout_param_type::descriptor_table_with_static_samplers"/> or <see cref="pipeline_layout_param_type::push_descriptors_with_static_samplers"/>.
-			/// </summary>
-			struct
-			{
-				uint32_t count;
-				const descriptor_range_with_static_samplers *ranges;
-			} descriptor_table_with_static_samplers;
 		};
 	};
 
 	/// <summary>
 	/// An opaque handle to a pipeline layout object.
-	/// <para>
-	/// Depending on the graphics API this can be:
-	/// <list type="bullet">
-	/// <item>Direct3D 9: An opaque value.</item>
-	/// <item>Direct3D 10: An opaque value.</item>
-	/// <item>Direct3D 11: An opaque value.</item>
-	/// <item>Direct3D 12: A pointer to a 'ID3D12RootSignature' object.</item>
-	/// <item>OpenGL: An opaque value.</item>
-	/// <item>Vulkan: A 'VkPipelineLayout' handle.</item>
-	/// </list>
-	/// </para>
+	/// <para>In D3D12 this is a pointer to a 'ID3D12RootSignature' object, in Vulkan a 'VkPipelineLayout' handle.</para>
 	/// </summary>
 	RESHADE_DEFINE_HANDLE(pipeline_layout);
 
 	/// <summary>
-	/// Fill mode to use when rendering triangles.
+	/// The fill mode to use when rendering triangles.
 	/// </summary>
 	enum class fill_mode : uint32_t
 	{
@@ -296,7 +258,7 @@ namespace reshade::api
 	RESHADE_DEFINE_ENUM_FLAG_OPERATORS(cull_mode);
 
 	/// <summary>
-	/// Logic operations.
+	/// The available logic operations.
 	/// </summary>
 	enum class logic_op : uint32_t
 	{
@@ -319,7 +281,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Color or alpha blending operations.
+	/// The available color or alpha blending operations.
 	/// </summary>
 	enum class blend_op : uint32_t
 	{
@@ -331,7 +293,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Blend factors in color or alpha blending operations, which modulate values between the pixel shader output and render target.
+	/// The available blend factors in color or alpha blending operations.
 	/// </summary>
 	enum class blend_factor : uint32_t
 	{
@@ -357,7 +319,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Stencil operations that can be performed during depth-stencil testing.
+	/// The available stencil operations that can be performed during depth-stencil testing.
 	/// </summary>
 	enum class stencil_op : uint32_t
 	{
@@ -460,7 +422,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Type of a ray tracing shader group.
+	/// The available ray tracing shader group types.
 	/// </summary>
 	enum class shader_group_type
 	{
@@ -799,7 +761,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Flags that specify additional parameters of a pipeline.
+	/// The available pipeline creation flags.
 	/// </summary>
 	enum class pipeline_flags : uint32_t
 	{
@@ -811,7 +773,7 @@ namespace reshade::api
 	RESHADE_DEFINE_ENUM_FLAG_OPERATORS(pipeline_flags);
 
 	/// <summary>
-	/// Type of a pipeline sub-object.
+	/// The available pipeline sub-object types.
 	/// </summary>
 	enum class pipeline_subobject_type : uint32_t
 	{
@@ -1040,17 +1002,7 @@ namespace reshade::api
 
 	/// <summary>
 	/// An opaque handle to a pipeline state object.
-	/// <para>
-	/// Depending on the graphics API this can be:
-	/// <list type="bullet">
-	/// <item>Direct3D 9: A pointer to a 'IDirect3D(...)Shader' object.</item>
-	/// <item>Direct3D 10: A pointer to a 'ID3D10(...)(Shader/State)' object.</item>
-	/// <item>Direct3D 11: A pointer to a 'ID3D11(...)(Shader/State)' object.</item>
-	/// <item>Direct3D 12: A pointer to a 'ID3D12PipelineState' object.</item>
-	/// <item>OpenGL: An opaque value.</item>
-	/// <item>Vulkan: A 'VkPipeline' handle.</item>
-	/// </list>
-	/// </para>
+	/// <para>In D3D9, D3D10, D3D11 or D3D12 this is a pointer to a 'IDirect3D(...)Shader', 'ID3D10(...)(Shader/State)', 'ID3D11(...)(Shader/State)' or 'ID3D12PipelineState' object, in Vulkan a 'VkPipeline' handle.</para>
 	/// </summary>
 	RESHADE_DEFINE_HANDLE(pipeline);
 
@@ -1091,17 +1043,7 @@ namespace reshade::api
 
 	/// <summary>
 	/// An opaque handle to a descriptor table in a descriptor heap.
-	/// <para>
-	/// Depending on the graphics API this can be:
-	/// <list type="bullet">
-	/// <item>Direct3D 9: An opaque value.</item>
-	/// <item>Direct3D 10: An opaque value.</item>
-	/// <item>Direct3D 11: An opaque value.</item>
-	/// <item>Direct3D 12: An opaque value.</item>
-	/// <item>OpenGL: An opaque value.</item>
-	/// <item>Vulkan: A 'VkDescriptorSet' handle.</item>
-	/// </list>
-	/// </para>
+	/// <para>In Vulkan this is a 'VkDescriptorSet' handle.</para>
 	/// </summary>
 	RESHADE_DEFINE_HANDLE(descriptor_table);
 
@@ -1177,22 +1119,12 @@ namespace reshade::api
 
 	/// <summary>
 	/// An opaque handle to a descriptor heap.
-	/// <para>
-	/// Depending on the graphics API this can be:
-	/// <list type="bullet">
-	/// <item>Direct3D 9: An opaque value.</item>
-	/// <item>Direct3D 10: An opaque value.</item>
-	/// <item>Direct3D 11: An opaque value.</item>
-	/// <item>Direct3D 12: A pointer to a 'ID3D12DescriptorHeap' object.</item>
-	/// <item>OpenGL: An opaque value.</item>
-	/// <item>Vulkan: A 'VkDescriptorPool' handle.</item>
-	/// </list>
-	/// </para>
+	/// <para>In D3D12 this is a pointer to a 'ID3D12DescriptorHeap' object, in Vulkan a 'VkDescriptorPool' handle.</para>
 	/// </summary>
 	RESHADE_DEFINE_HANDLE(descriptor_heap);
 
 	/// <summary>
-	/// Type of a query.
+	/// The available query types.
 	/// </summary>
 	enum class query_type
 	{
@@ -1223,52 +1155,18 @@ namespace reshade::api
 		stream_output_statistics_0 = 4,
 		stream_output_statistics_1,
 		stream_output_statistics_2,
-		stream_output_statistics_3,
-		/// <summary>
-		/// Current size of the acceleration structure.
-		/// Data is a 64-bit unsigned integer value.
-		/// </summary>
-		/// <seealso cref="command_list::query_acceleration_structures"/>
-		acceleration_structure_size = 100,
-		/// <summary>
-		/// Size of the acceleration structure after compaction.
-		/// Data is a 64-bit unsigned integer value.
-		/// </summary>
-		/// <seealso cref="command_list::query_acceleration_structures"/>
-		acceleration_structure_compacted_size,
-		/// <summary>
-		/// Size of the serialization data of the acceleration structure.
-		/// Data is a 64-bit unsigned integer value.
-		/// </summary>
-		/// <seealso cref="command_list::query_acceleration_structures"/>
-		acceleration_structure_serialization_size,
-		/// <summary>
-		/// Number of bottom-level acceleration structure pointers in the acceleration structure.
-		/// Data is a 64-bit unsigned integer value.
-		/// </summary>
-		/// <seealso cref="command_list::query_acceleration_structures"/>
-		acceleration_structure_bottom_level_acceleration_structure_pointers
+		stream_output_statistics_3
 	};
 
 	/// <summary>
 	/// An opaque handle to a query heap.
-	/// <para>
-	/// Depending on the graphics API this can be:
-	/// <list type="bullet">
-	/// <item>Direct3D 9: An opaque value.</item>
-	/// <item>Direct3D 10: An opaque value.</item>
-	/// <item>Direct3D 11: An opaque value.</item>
-	/// <item>Direct3D 12: A pointer to a 'ID3D12QueryHeap' object.</item>
-	/// <item>OpenGL: An opaque value.</item>
-	/// <item>Vulkan: A 'VkQueryPool' handle.</item>
-	/// </list>
-	/// </para>
+	/// <para>In D3D12 this is a pointer to a 'ID3D12QueryHeap' object, in Vulkan a 'VkQueryPool' handle.</para>
 	/// </summary>
 	RESHADE_DEFINE_HANDLE(query_heap);
 
 	/// <summary>
 	/// A list of all possible render pipeline states that can be set independent of pipeline state objects.
-	/// <para>Support for these varies between graphics APIs (e.g. modern APIs like D3D12 and Vulkan support much less dynamic states than D3D9).</para>
+	/// <para>Support for these varies between render APIs (e.g. modern APIs like D3D12 and Vulkan support much less dynamic states than D3D9).</para>
 	/// </summary>
 	enum class dynamic_state
 	{
@@ -1363,7 +1261,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Flags that specify additional parameters of a fence.
+	/// A list of flags that describe fence creation options.
 	/// </summary>
 	enum class fence_flags : uint32_t
 	{
@@ -1376,17 +1274,7 @@ namespace reshade::api
 
 	/// <summary>
 	/// An opaque handle to a fence synchronization object.
-	/// <para>
-	/// Depending on the graphics API this can be:
-	/// <list type="bullet">
-	/// <item>Direct3D 9: An opaque value.</item>
-	/// <item>Direct3D 10: An opaque value.</item>
-	/// <item>Direct3D 11: A pointer to a 'ID3D11Fence' object.</item>
-	/// <item>Direct3D 12: A pointer to a 'ID3D12Fence' object.</item>
-	/// <item>OpenGL: An opaque value.</item>
-	/// <item>Vulkan: A 'VkSemaphore' handle.</item>
-	/// </list>
-	/// </para>
+	/// <para>In D3D11 or D3D12 this is a pointer to a 'ID3D11Fence' or 'ID3D12Fence' object, in Vulkan a 'VkSemaphore' handle.</para>
 	/// </summary>
 	RESHADE_DEFINE_HANDLE(fence);
-}
+} }

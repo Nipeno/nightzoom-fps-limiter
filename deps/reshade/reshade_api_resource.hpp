@@ -26,10 +26,10 @@
 
 #include "reshade_api_format.hpp"
 
-namespace reshade::api
+namespace reshade { namespace api
 {
 	/// <summary>
-	/// Comparison operations.
+	/// The available comparison types.
 	/// </summary>
 	enum class compare_op : uint32_t
 	{
@@ -44,7 +44,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Texture filtering modes available for texture sampling operations.
+	/// The available filtering modes used for texture sampling operations.
 	/// </summary>
 	enum class filter_mode : uint32_t
 	{
@@ -71,7 +71,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Sampling behavior at texture coordinates outside the bounds of a texture resource.
+	/// Specifies behavior of sampling with texture coordinates outside a texture resource.
 	/// </summary>
 	enum class texture_address_mode : uint32_t
 	{
@@ -131,22 +131,12 @@ namespace reshade::api
 
 	/// <summary>
 	/// An opaque handle to a sampler state object.
-	/// <para>
-	/// Depending on the graphics API this can be:
-	/// <list type="bullet">
-	/// <item>Direct3D 9: An opaque value.</item>
-	/// <item>Direct3D 10: A pointer to a 'ID3D10SamplerState' object.</item>
-	/// <item>Direct3D 11: A pointer to a 'ID3D11SamplerState' object.</item>
-	/// <item>Direct3D 12: A 'D3D12_CPU_DESCRIPTOR_HANDLE' (to a sampler descriptor).</item>
-	/// <item>OpenGL: An OpenGL sampler object name.</item>
-	/// <item>Vulkan: A 'VkSampler' handle.</item>
-	/// </list>
-	/// </para>
+	/// <para>Depending on the render API this can be a pointer to a 'ID3D10SamplerState', 'ID3D11SamplerState' or a 'D3D12_CPU_DESCRIPTOR_HANDLE' (to a sampler descriptor) or 'VkSampler' handle.</para>
 	/// </summary>
 	RESHADE_DEFINE_HANDLE(sampler);
 
 	/// <summary>
-	/// Memory mapping access types.
+	/// The available memory mapping access types.
 	/// </summary>
 	enum class map_access
 	{
@@ -157,7 +147,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Memory heap types, which give a hint as to where to place the allocation for a resource.
+	/// The available memory heap types, which give a hint as to where to place the memory allocation for a resource.
 	/// </summary>
 	enum class memory_heap : uint32_t
 	{
@@ -172,7 +162,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Type of a resource. This is specified during creation and is immutable.
+	/// The available resource types. The type of a resource is specified during creation and is immutable.
 	/// Various operations may have special requirements on the type of resources they operate on (e.g. copies can only happen between resources of the same type, ...).
 	/// </summary>
 	enum class resource_type : uint32_t
@@ -186,44 +176,23 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Flags that specify additional parameters of a resource.
+	/// A list of flags that describe additional parameters of a resource.
 	/// </summary>
 	enum class resource_flags : uint32_t
 	{
 		none = 0,
-		/// <summary>
-		/// Dynamic resources can be frequently updated during a frame, with previous contents automatically being shadowed so to no affect already executing operations on the GPU.
-		/// Required for <see cref="map_access::write_discard"/>. The flag is not supported in D3D12 or Vulkan.
-		/// </summary>
 		dynamic = (1 << 3),
-		/// <summary>
-		/// Immutable resources can never be written to again after creationn, either by the CPU or the GPU.
-		/// The flag is only supported in D3D10 and D3D11.
-		/// </summary>
-		immutable = (1 << 4),
-		/// <summary>
-		/// Required to create <see cref="resource_view_type::texture_cube"/> or <see cref="resource_view_type::texture_cube_array"/> views of the resource.
-		/// </summary>
 		cube_compatible = (1 << 2),
-		/// <summary>
-		/// Required to use the resource with <see cref="command_list::generate_mipmaps"/>.
-		/// </summary>
 		generate_mipmaps = (1 << 0),
-		/// <summary>
-		/// Shared resources can be imported/exported from/to different graphics APIs and/or processes.
-		/// Required to use the "shared_handle" parameter of <see cref="device::create_resource"/>.
-		/// </summary>
 		shared = (1 << 1),
 		shared_nt_handle = (1 << 11),
-		/// <summary>
-		/// Resource is backed using sparse memory binding.
-		/// </summary>
-		sparse_binding = (1 << 18),
+		structured = (1 << 6),
+		sparse_binding = (1 << 18)
 	};
 	RESHADE_DEFINE_ENUM_FLAG_OPERATORS(resource_flags);
 
 	/// <summary>
-	/// Flags that specify how a resource is used.
+	/// A list of flags that specify how a resource is to be used.
 	/// This needs to be specified during creation and is also used to transition between different resource states within a command list.
 	/// </summary>
 	enum class resource_usage : uint32_t
@@ -265,9 +234,9 @@ namespace reshade::api
 	/// </summary>
 	struct [[nodiscard]] resource_desc
 	{
-		constexpr resource_desc() : texture({ 0, 0, 0, 0, format::unknown, 0 }) {}
-		constexpr resource_desc(uint64_t size, memory_heap heap, resource_usage usage, resource_flags flags = resource_flags::none) :
-			type(resource_type::buffer), buffer({ size }), heap(heap), usage(usage), flags(flags) {}
+		constexpr resource_desc() : texture() {}
+		constexpr resource_desc(uint64_t size, memory_heap heap, resource_usage usage) :
+			type(resource_type::buffer), buffer({ size }), heap(heap), usage(usage) {}
 		constexpr resource_desc(uint32_t width, uint32_t height, uint16_t layers, uint16_t levels, format format, uint16_t samples, memory_heap heap, resource_usage usage, resource_flags flags = resource_flags::none) :
 			type(resource_type::texture_2d), texture({ width, height, layers, levels, format, samples }), heap(heap), usage(usage), flags(flags) {}
 		constexpr resource_desc(resource_type type, uint32_t width, uint32_t height, uint16_t depth_or_layers, uint16_t levels, format format, uint16_t samples, memory_heap heap, resource_usage usage, resource_flags flags = resource_flags::none) :
@@ -333,12 +302,12 @@ namespace reshade::api
 		/// </summary>
 		memory_heap heap = memory_heap::unknown;
 		/// <summary>
-		/// Flags that specify how this resource is used.
+		/// Flags that specify how this resource may be used.
 		/// This should contain all resource states the resource will ever be transitioned to (including the initial state specified for resource creation).
 		/// </summary>
 		resource_usage usage = resource_usage::undefined;
 		/// <summary>
-		/// Flags that specify additional parameters.
+		/// Flags that describe additional parameters.
 		/// </summary>
 		resource_flags flags = resource_flags::none;
 	};
@@ -346,22 +315,12 @@ namespace reshade::api
 	/// <summary>
 	/// An opaque handle to a resource object (buffer, texture, ...).
 	/// <para>Resources created by the application are only guaranteed to be valid during event callbacks.</para>
-	/// <para>
-	/// Depending on the graphics API this can be:
-	/// <list type="bullet">
-	/// <item>Direct3D 9: A pointer to a 'IDirect3DResource9' object.</item>
-	/// <item>Direct3D 10: A pointer to a 'ID3D10Resource' object.</item>
-	/// <item>Direct3D 11: A pointer to a 'ID3D11Resource' object.</item>
-	/// <item>Direct3D 12: A pointer to a 'ID3D12Resource' object.</item>
-	/// <item>OpenGL: The upper 24-bit contain the OpenGL object type (like GL_BUFFER, GL_TEXTURE_2D, GL_RENDERBUFFER, ...), the lower 32-bit contain the OpenGL object name. So the object type can be extracted with <c>(handle >> 40)</c>, the object with <c>(handle & 0xFFFFFFFF)</c>.</item>
-	/// <item>Vulkan: A 'VkImage' handle.</item>
-	/// </list>
-	/// </para>
+	/// <para>Depending on the render API this can be a pointer to a 'IDirect3DResource9', 'ID3D10Resource', 'ID3D11Resource' or 'ID3D12Resource' object or a 'VkImage' handle.</para>
 	/// </summary>
 	RESHADE_DEFINE_HANDLE(resource);
 
 	/// <summary>
-	/// Type of a resource view. This identifies how a resource view interprets the data of its resource.
+	/// The available resource view types. These identify how a resource view interprets the data of its resource.
 	/// </summary>
 	enum class resource_view_type : uint32_t
 	{
@@ -384,7 +343,7 @@ namespace reshade::api
 	/// </summary>
 	struct [[nodiscard]] resource_view_desc
 	{
-		constexpr resource_view_desc() : texture({ 0, 0, 0, 0 }) {}
+		constexpr resource_view_desc() : texture() {}
 		constexpr resource_view_desc(format format, uint64_t offset, uint64_t size) :
 			type(resource_view_type::buffer), format(format), buffer({ offset, size }) {}
 		constexpr resource_view_desc(format format, uint32_t first_level, uint32_t levels, uint32_t first_layer, uint32_t layers) :
@@ -452,17 +411,7 @@ namespace reshade::api
 	/// <summary>
 	/// An opaque handle to a resource view object (depth-stencil, render target, shader resource view, ...).
 	/// <para>Resource views created by the application are only guaranteed to be valid during event callbacks.</para>
-	/// <para>
-	/// Depending on the graphics API this can be:
-	/// <list type="bullet">
-	/// <item>Direct3D 9: A pointer to a 'IDirect3DResource9' object.</item>
-	/// <item>Direct3D 10: A pointer to a 'ID3D10View' object.</item>
-	/// <item>Direct3D 11: A pointer to a 'ID3D11View' object.</item>
-	/// <item>Direct3D 12: A 'D3D12_CPU_DESCRIPTOR_HANDLE' (to a view descriptor) or 'D3D12_GPU_VIRTUAL_ADDRESS' (to an acceleration structrue).</item>
-	/// <item>OpenGL: The upper 24-bit contain the OpenGL object type (like GL_TEXTURE_BUFFER, GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X, ...), the lower 32-bit contain the OpenGL object ID. So the object type can be extracted with <c>(handle >> 40)</c>, the object with <c>(handle & 0xFFFFFFFF)</c>.</item>
-	/// <item>Vulkan: A 'VkImageView' or 'VkAccelerationStructureKHR' handle.</item>
-	/// </list>
-	/// </para>
+	/// <para>Depending on the render API this can be a pointer to a 'IDirect3DResource9', 'ID3D10View' or 'ID3D11View' object, or a 'D3D12_CPU_DESCRIPTOR_HANDLE' (to a view descriptor), 'D3D12_GPU_VIRTUAL_ADDRESS' (to an acceleration structrue), 'VkImageView' or 'VkAccelerationStructureKHR' handle.</para>
 	/// </summary>
 	RESHADE_DEFINE_HANDLE(resource_view);
 
@@ -471,12 +420,12 @@ namespace reshade::api
 	/// </summary>
 	struct subresource_box
 	{
-		uint32_t left = 0;
-		uint32_t top = 0;
-		uint32_t front = 0;
-		uint32_t right = 0;
-		uint32_t bottom = 0;
-		uint32_t back = 0;
+		int32_t left = 0;
+		int32_t top = 0;
+		int32_t front = 0;
+		int32_t right = 0;
+		int32_t bottom = 0;
+		int32_t back = 0;
 
 		constexpr uint32_t width() const { return right - left; }
 		constexpr uint32_t height() const { return bottom - top; }
@@ -584,7 +533,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Type of an acceleration structure.
+	/// The available acceleration structure types.
 	/// </summary>
 	enum class acceleration_structure_type
 	{
@@ -594,7 +543,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Type of an acceleration structure copy operation.
+	/// The available acceleration structure copy modes.
 	/// </summary>
 	enum class acceleration_structure_copy_mode
 	{
@@ -605,7 +554,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Type of an acceleration structure build operation.
+	/// The available acceleration structure build modes.
 	/// </summary>
 	enum class acceleration_structure_build_mode
 	{
@@ -614,7 +563,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Flags that specify additional parameters to an acceleration structure build operation.
+	/// The available acceleration structure build flags.
 	/// </summary>
 	enum class acceleration_structure_build_flags : uint32_t
 	{
@@ -628,7 +577,7 @@ namespace reshade::api
 	RESHADE_DEFINE_ENUM_FLAG_OPERATORS(acceleration_structure_build_flags);
 
 	/// <summary>
-	/// Type of an acceleration structure structure build input.
+	/// The available acceleration structure build input types.
 	/// </summary>
 	enum class acceleration_structure_build_input_type : uint32_t
 	{
@@ -638,7 +587,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Flags that specify additional parameters of an acceleration structure build input.
+	/// The available acceleration structure build input flags.
 	/// </summary>
 	enum class acceleration_structure_build_input_flags : uint32_t
 	{
@@ -649,7 +598,7 @@ namespace reshade::api
 	RESHADE_DEFINE_ENUM_FLAG_OPERATORS(acceleration_structure_build_input_flags);
 
 	/// <summary>
-	/// Describes a single instance in a top-level acceleration structure.
+	/// Describes an instance in a top-level acceleration structure.
 	/// The data in <see cref="acceleration_structure_build_input::instances::buffer"/> should be an array of this structure.
 	/// </summary>
 	struct acceleration_structure_instance
@@ -663,7 +612,7 @@ namespace reshade::api
 	};
 
 	/// <summary>
-	/// Describes a build input for an acceleration structure build operation.
+	/// Describes a build input for an acceleration structure build.
 	/// </summary>
 	struct acceleration_structure_build_input
 	{
@@ -673,7 +622,7 @@ namespace reshade::api
 		constexpr acceleration_structure_build_input(api::resource instance_buffer, uint64_t instance_offset, uint32_t instance_count, bool array_of_pointers = false) : type(acceleration_structure_build_input_type::instances), instances({ instance_buffer, instance_offset, instance_count, array_of_pointers }) {}
 
 		/// <summary>
-		/// Type of the acceleration structure build input.
+		/// Type of the build input.
 		/// </summary>
 		acceleration_structure_build_input_type type = acceleration_structure_build_input_type::triangles;
 
@@ -721,8 +670,8 @@ namespace reshade::api
 		};
 
 		/// <summary>
-		/// Flags that specify additional parameters.
+		/// Flags that describe additional parameters.
 		/// </summary>
 		acceleration_structure_build_input_flags flags = acceleration_structure_build_input_flags::none;
 	};
-}
+} }

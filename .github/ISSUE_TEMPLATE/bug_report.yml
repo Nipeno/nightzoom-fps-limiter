@@ -1,0 +1,86 @@
+name: Bug report
+description: Something broke — addon not loading, FPS not capping, overlay missing, etc.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please fill this out so we can reproduce. Most issues are install/ReShade-version related — the questions below catch the common ones.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What went wrong, and what did you expect instead?
+      placeholder: FPS still uncapped / overlay won't open / game crashes on launch / ...
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Extracted zip to ...
+        2. Launched FiveM
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: install-type
+    attributes:
+      label: Install type
+      options:
+        - Fresh ReShade (used the bundled dxgi.dll)
+        - Existing graphics pack (NVE / QuantV) — added only the addon
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: reshade-version
+    attributes:
+      label: ReShade version
+      description: Shown top-left of the ReShade overlay when you open it.
+      placeholder: e.g. 6.7.3
+    validations:
+      required: false
+  - type: dropdown
+    id: enabled
+    attributes:
+      label: Did you run Enable-ReShade.bat (or add the ReShade5 line to CitizenFX.ini)?
+      options:
+        - "Yes — ran the .bat"
+        - "Yes — edited CitizenFX.ini by hand"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+  - type: input
+    id: overlay-key
+    attributes:
+      label: Overlay key tried
+      description: Default is Home; NVE remaps it to Insert. Did either open the overlay?
+      placeholder: e.g. Home — nothing; Insert — opened
+    validations:
+      required: false
+  - type: input
+    id: addon-version
+    attributes:
+      label: Addon version
+      description: Shown in the overlay under "Made by Nipeno", and in the zip name (NZ-FPS-Limiter_v<ver>.zip).
+      placeholder: e.g. v2.3.0
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: e.g. Windows 11 23H2
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: ReShade log
+      description: Attach or paste FiveM.app/ReShade.log if you have it. Drag-drop the file here.
+    validations:
+      required: false

@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest an improvement to the addon, tooling, or docs.
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Heads up: the **60 FPS cap is hardcoded by design** (GTA physics is frame-rate dependent — capping everyone keeps racing fair). Requests for a configurable cap, slider, or presets will be declined. Anything else is fair game.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What are you trying to do that's hard or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

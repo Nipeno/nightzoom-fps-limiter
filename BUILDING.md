@@ -16,9 +16,30 @@ cmake --build build --config Release
 # -> build/Release/NZ-FPS-Limiter.addon64
 ```
 
-CI builds the addon on every push via GitHub Actions
+CI builds the addon on every push and PR via GitHub Actions
 ([`.github/workflows/build.yml`](.github/workflows/build.yml)) on a `windows-2022` runner; the
-compiled `.addon64` is attached to each run as a build artifact.
+assembled bundle is attached to each run as a build artifact.
+
+### Versioning
+
+The version comes from the git tag and nothing else. CI passes `-DNZ_VERSION=X.Y.Z`, which flows
+into three places: the DLL's `VERSIONINFO` resource (generated from
+[`src/version.rc.in`](src/version.rc.in), so Windows file properties show it), the
+`NZ_VERSION_STR` compile definition the overlay prints, and the release zip's filename. Local and
+CI builds don't pass it, so they report **`0.0.0`** — that's the intended "not a release build"
+signal, not a bug. To build a versioned binary by hand:
+
+```sh
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION=2.3.0
+```
+
+### Runtime library
+
+`CMAKE_MSVC_RUNTIME_LIBRARY` is set to `MultiThreaded` (`/MT`), so the CRT links statically. This
+DLL is injected into someone else's game process; with the dynamic CRT it would need the VC++
+redistributable present, and on a machine without it ReShade just silently declines to load the
+addon — which is indistinguishable from "the addon is broken" for the person reporting it. Keep it
+static.
 
 ## Dependencies
 
@@ -87,22 +108,30 @@ pngquant --quality=70-90 --strip --force --output /tmp/logo.png /tmp/logo.png   
 
 ## Release bundle (CI)
 
-Each build also assembles a drag-and-drop bundle for end users. The
-[`build.yml`](.github/workflows/build.yml) workflow, after compiling the addon:
+Two workflows, deliberately split so only one of them can write to the repo:
 
-1. **Resolves the latest ReShade** - scrapes `https://reshade.me/` for
+- [`build.yml`](.github/workflows/build.yml) — dev CI. Runs on push/PR, `permissions: contents:
+  read`, builds at version `0.0.0` and uploads the bundle as an artifact. Publishes nothing.
+- [`release.yml`](.github/workflows/release.yml) — runs on a `v*` tag with `contents: write`,
+  builds at the tag's version and attaches the zip to the GitHub Release. A manual
+  `workflow_dispatch` run is a dry run: it builds and uploads an artifact but creates no Release.
+
+Both assemble the same drag-and-drop bundle for end users. After compiling the addon they:
+
+1. **Resolve the latest ReShade** - scrape `https://reshade.me/` for
    `ReShade_Setup_<version>_Addon.exe`. If scraping fails (site change / rate-limit), it falls
    back to a pinned version (`6.7.3`) so the build never breaks.
-2. **Downloads + extracts** the add-on-enabled installer and pulls out `ReShade64.dll` via
-   `7z e ReShade_Setup.exe ReShade64.dll`, then copies it to **`dxgi.dll`** (the name FiveM loads
+2. **Download + extract** the add-on-enabled installer and pull out `ReShade64.dll` via
+   `7z e ReShade_Setup.exe ReShade64.dll`, then copy it to **`dxgi.dll`** (the name FiveM loads
    ReShade under from its `plugins` folder).
-3. **Zips** `dxgi.dll` + `NZ-FPS-Limiter.addon64` + `packaging/Enable-ReShade.bat` +
-   `packaging/Install Guide.html` + the license notices into `NZ-FPS-Limiter_v<ver>.zip`.
+3. **Zip** `dxgi.dll` + `NZ-FPS-Limiter.addon64` + `packaging/Enable-ReShade.bat` +
+   `packaging/Install Guide.html` + both license notices + `reshade-version.txt` into
+   `NZ-FPS-Limiter_v<ver>.zip`.
 
-Every run uploads that single all-in-one zip as the build artifact. When a `v*` **tag** is
-pushed, it's also attached to the matching GitHub Release (`softprops/action-gh-release`, needs
-`permissions: contents: write`). The end-user install guide lives in `packaging/Install Guide.html` -
-users who already have ReShade just skip the `dxgi.dll` / enable steps (the guide says where).
+The zip name carries the **addon** version (from the tag), which is why the bundled ReShade
+version is recorded in `reshade-version.txt` inside the zip instead. The end-user install guide
+lives in `packaging/Install Guide.html` - users who already have ReShade just skip the `dxgi.dll`
+/ enable steps (the guide says where).
 
 ### `Enable-ReShade.bat` (FiveM unblock helper)
 
@@ -118,10 +147,19 @@ from the `#:PS:#` marker) that computes the ID, locates `CitizenFX.ini` (parent 
 folder it ships in, then `%LOCALAPPDATA%`, then the `fivem://` registry handler), and writes the
 key via `WritePrivateProfileString` (same Win32 API FiveM reads with - safe section merge).
 
-To cut a release:
+## Cutting a release
+
+Update [`CHANGELOG.md`](CHANGELOG.md), then push a tag:
 
 ```sh
-git tag v1.1.0 && git push origin v1.1.0
+git tag vX.Y.Z && git push origin vX.Y.Z
+```
+
+`release.yml` does the rest. Verify afterwards - the asset name must carry the tag's version, not
+ReShade's:
+
+```sh
+gh release view vX.Y.Z --repo Nipeno/nightzoom-fps-limiter --json assets
 ```
 
 > The bundle carries whatever ReShade was latest at release time. Because ReShade loads addons
@@ -129,7 +167,8 @@ git tag v1.1.0 && git push origin v1.1.0
 
 ## Third-party licenses
 
-Vendored headers and the bundled binary keep their upstream notices under `third_party/`:
+Vendored headers and the bundled binary keep their upstream notices under `third_party/`. Both
+ship inside the release zip:
 
 - [`third_party/ReShade-LICENSE.txt`](third_party/ReShade-LICENSE.txt) - BSD 3-Clause, covers the
   vendored `deps/reshade` headers **and** the bundled `dxgi.dll` (ReShade binary).

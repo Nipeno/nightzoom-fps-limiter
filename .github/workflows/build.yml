@@ -1,14 +1,16 @@
 name: Build
 
+# Dev CI: builds the addon and assembles the end-user bundle on every push/PR so
+# breakage shows up immediately. Releases are cut by release.yml on a v* tag - this
+# workflow deliberately has no write access and never publishes anything.
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]
   pull_request:
   workflow_dispatch:   # lets you trigger a build manually from the Actions tab
 
 permissions:
-  contents: write      # needed to attach assets to a Release on tag
+  contents: read
 
 jobs:
   build:
@@ -19,8 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # CI builds are never releases, so they stay on the 0.0.0 sentinel version.
       - name: Configure (MSVC x64)
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION="0.0.0"
 
       - name: Build (Release)
         run: cmake --build build --config Release
@@ -64,31 +67,17 @@ jobs:
           Copy-Item dxgi.dll                             'dist/Copy-these-into-plugins/'
           Copy-Item packaging/Enable-ReShade.bat         'dist/Copy-these-into-plugins/'
           # Guide + licenses stay at the zip root.
-          Copy-Item 'packaging/Install Guide.html'   dist/
-          Copy-Item third_party/ReShade-LICENSE.txt  dist/
-          Copy-Item LICENSE                          dist/LICENSE.txt
-          $zip = "NZ-FPS-Limiter_v$env:reshade_version.zip"
-          Compress-Archive -Path dist/* -DestinationPath $zip -Force
-          "bundle_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Copy-Item 'packaging/Install Guide.html'       dist/
+          Copy-Item third_party/ReShade-LICENSE.txt      dist/
+          Copy-Item third_party/Dear-ImGui-LICENSE.txt   dist/
+          Copy-Item LICENSE                              dist/LICENSE.txt
+          # The zip name carries the addon version, so record the bundled ReShade here.
+          "$env:reshade_version" | Out-File -FilePath dist/reshade-version.txt -Encoding utf8 -NoNewline
+          Compress-Archive -Path dist/* -DestinationPath NZ-FPS-Limiter_v0.0.0.zip -Force
 
       # --- Artifact (available on every build) ------------------------------
       - name: Upload bundle (zip)
         uses: actions/upload-artifact@v4
         with:
           name: NZ-FPS-Limiter
-          path: ${{ env.bundle_zip }}
-
-      # --- Release (only when a v* tag is pushed) ---------------------------
-      - name: Attach asset to Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          name: NightZoom FPS Limiter ${{ github.ref_name }}
-          body: |
-            Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
-
-            **Install:** download the zip, extract it, and open **`Install Guide.html`** -
-            follow the steps. (It bundles ReShade, so it's all you need.)
-
-            💬 Discord: https://discord.gg/nightzoom · Open source (GPLv3).
-          files: ${{ env.bundle_zip }}
+          path: NZ-FPS-Limiter_v0.0.0.zip

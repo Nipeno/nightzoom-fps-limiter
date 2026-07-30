@@ -1,9 +1,21 @@
 # NightZoom FPS Limiter
 
+[![Build](https://github.com/Nipeno/nightzoom-fps-limiter/actions/workflows/build.yml/badge.svg)](https://github.com/Nipeno/nightzoom-fps-limiter/actions/workflows/build.yml)
+[![Latest release](https://img.shields.io/github/v/release/Nipeno/nightzoom-fps-limiter)](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest)
+[![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue)](LICENSE)
+
 Locks your game to a smooth **60 FPS**. A simple add-on for [ReShade](https://reshade.me) with
 one button - turn it on to cap, turn it off to unlock.
 
-> Made by **Nipeno** · 💬 [Join the Discord](https://discord.gg/nightzoom)
+> Made by **Nipeno**
+
+<!-- Screenshot of the overlay goes here:
+     ![The NightZoom FPS Limiter overlay](docs/overlay.png) -->
+
+## Why 60?
+
+GTA's physics is tied to your frame rate - cars handle differently at different FPS. Capping
+everyone to the same 60 keeps racing fair, which is why the cap is a fixed 60 and not a slider.
 
 ## ⚠️ Please read first
 
@@ -36,11 +48,25 @@ when *you* click the Discord or GitHub buttons), and it doesn't touch your game'
 The full source code is right here in this repo, and there's a **View Source on GitHub** button
 inside the add-on too.
 
-## Community
+## Troubleshooting
 
-Questions, need help, or found a bug? Come say hi:
+The **Troubleshooting** sections of the bundled `Install Guide.html` cover the common ones -
+the overlay not opening (try both **Home** and **Insert**; NVE remaps the key), and an older
+graphics-pack ReShade refusing to load the add-on.
 
-👉 **<https://discord.gg/nightzoom>**
+One that catches people out: **turn off VSync in-game.** The limiter and VSync both wait for
+their own timing, and running them together can stack those waits into stutter or an effective
+30 FPS. Use one or the other - this add-on instead of VSync.
+
+## Support
+
+Found a bug, or something won't install?
+**[Open an issue](https://github.com/Nipeno/nightzoom-fps-limiter/issues/new/choose)** - bug
+reports and questions are both handled on GitHub, so answers stay searchable for the next person
+who hits the same thing.
+
+Not on the NightZoom server yet? The Discord is at <https://discord.gg/nightzoom> - that's the
+place to get onto the server, not the place to report add-on bugs.
 
 ## Credits
 
@@ -50,6 +76,7 @@ Questions, need help, or found a bug? Come say hi:
 ## For developers
 
 Want to build it yourself or see how it works? See **[BUILDING.md](BUILDING.md)**.
+Contributions welcome - start with **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 ## License
 

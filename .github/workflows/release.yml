@@ -1,0 +1,119 @@
+name: Release
+
+# Release pipeline: on a v* tag, build the addon at that version and attach the
+# end-user bundle to the GitHub Release. Kept separate from the dev CI (build.yml) so
+# only this workflow ever needs write access to the repo.
+# workflow_dispatch is a dry run: it builds and uploads an artifact but never publishes,
+# even when dispatched against a tag ref (the publish step checks the event, not the ref).
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # attach assets to the Release
+
+jobs:
+  release:
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Version from the tag (single source of truth) --------------------
+      - name: Resolve addon version
+        run: |
+          # Plain vX.Y.Z only, anchored at both ends. CMake's project(VERSION) rejects a
+          # prerelease suffix, and an unanchored match would quietly turn v2.3.0-beta.1 into
+          # 2.3.0 - shipping a prerelease under the final version's name. Fail loudly instead.
+          $ver = '0.0.0'
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            if ($env:GITHUB_REF_NAME -match '^v([0-9]+\.[0-9]+\.[0-9]+)$') {
+              $ver = $Matches[1]
+            } else {
+              Write-Error "Tag '$($env:GITHUB_REF_NAME)' is not a plain vX.Y.Z release tag. Refusing to build a release from it."
+              exit 1
+            }
+          }
+          Write-Host "Addon version: $ver"
+          "nz_version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Configure (MSVC x64)
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DNZ_VERSION="${{ env.nz_version }}"
+
+      - name: Build (Release)
+        run: cmake --build build --config Release
+
+      # --- Fetch the latest official ReShade (add-on build) -----------------
+      - name: Resolve + download latest ReShade
+        run: |
+          $fallback = '6.7.3'
+          $ver = $fallback
+          try {
+            $html = (Invoke-WebRequest -Uri 'https://reshade.me/' -UseBasicParsing -UserAgent 'Mozilla/5.0').Content
+            $m = [regex]::Match($html, 'ReShade_Setup_([0-9.]+)_Addon\.exe')
+            if ($m.Success) { $ver = $m.Groups[1].Value }
+          } catch {
+            Write-Host "::warning::Could not scrape reshade.me ($($_.Exception.Message)); using pinned $fallback"
+          }
+          Write-Host "Using ReShade version: $ver"
+          "reshade_version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+          $url = "https://reshade.me/downloads/ReShade_Setup_${ver}_Addon.exe"
+          curl.exe -fL -A 'Mozilla/5.0' -o ReShade_Setup.exe $url
+          7z e ReShade_Setup.exe ReShade64.dll -y
+          if (-not (Test-Path ReShade64.dll) -or ((Get-Item ReShade64.dll).Length -lt 100000)) {
+            Write-Error "ReShade64.dll was not extracted correctly (download may have failed)."
+            exit 1
+          }
+          Copy-Item ReShade64.dll dxgi.dll -Force   # FiveM loads ReShade as dxgi.dll
+
+      # --- Assemble the drag-and-drop bundle --------------------------------
+      - name: Assemble bundle
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          New-Item -ItemType Directory -Force -Path 'dist/Copy-these-into-plugins' | Out-Null
+          Copy-Item build/Release/NZ-FPS-Limiter.addon64 'dist/Copy-these-into-plugins/'
+          Copy-Item dxgi.dll                             'dist/Copy-these-into-plugins/'
+          Copy-Item packaging/Enable-ReShade.bat         'dist/Copy-these-into-plugins/'
+          Copy-Item 'packaging/Install Guide.html'       dist/
+          Copy-Item third_party/ReShade-LICENSE.txt      dist/
+          Copy-Item third_party/Dear-ImGui-LICENSE.txt   dist/
+          Copy-Item LICENSE                              dist/LICENSE.txt
+          # The zip name carries the addon version, so record the bundled ReShade here.
+          "$env:reshade_version" | Out-File -FilePath dist/reshade-version.txt -Encoding utf8 -NoNewline
+          $zip = "NZ-FPS-Limiter_v$env:nz_version.zip"
+          Compress-Archive -Path dist/* -DestinationPath $zip -Force
+          "bundle_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # --- Dry run: keep the artifact so a manual trigger is still useful ----
+      - name: Upload bundle (dry run)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: NZ-FPS-Limiter-dryrun
+          path: ${{ env.bundle_zip }}
+
+      # --- Release (only when a v* tag is PUSHED) ---------------------------
+      # Gated on the event, not just the ref: the Actions UI lets you dispatch this
+      # workflow against a tag, which would otherwise satisfy a ref-only check and
+      # publish a real Release from what is supposed to be a dry run.
+      - name: Publish Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            Locks your game to a smooth **60 FPS**. A ReShade add-on for the NightZoom server.
+
+            **Install:** download the zip, extract it, and open **`Install Guide.html`** -
+            follow the steps. (It bundles ReShade, so it's all you need.)
+
+            Bundled ReShade: **${{ env.reshade_version }}**.
+
+            Something not working? [Open an issue](https://github.com/Nipeno/nightzoom-fps-limiter/issues/new/choose).
+            Open source (GPLv3).
+          files: ${{ env.bundle_zip }}

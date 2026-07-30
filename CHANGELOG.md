@@ -10,6 +10,19 @@ Every release bundles whatever ReShade was latest at build time; the exact versi
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-07-30
+
+Documentation only — the add-on itself is unchanged from 2.4.0.
+
+### Fixed
+- Corrected the install guide, which claimed specific graphics packs ship old ReShade and install it
+  under a particular file name. Neither is true of current versions. The guidance that matters is
+  unchanged: ReShade can be installed as `dxgi.dll`, `d3d11.dll`, `d3d12.dll`, `d3d9.dll` or
+  `opengl32.dll`, so if you ever do replace it by hand, the replacement must be renamed to match
+  whichever file you already have.
+- If your ReShade is older than 6.1, the guide now recommends updating your graphics pack first,
+  rather than going straight to swapping ReShade DLLs by hand.
+
 ## [2.4.0] - 2026-07-30
 
 ### Fixed
@@ -122,7 +135,8 @@ Initial release.
 - GPLv3 license, a "View Source on GitHub" button in the overlay, and split user/developer docs.
 - GitHub Actions build targeting ReShade addon API 18 (SDK v6.7.3).
 
-[Unreleased]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.4.1...HEAD
+[2.4.1]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.1.2...v2.2.0

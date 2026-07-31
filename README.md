@@ -4,6 +4,8 @@
 [![Latest release](https://img.shields.io/github/v/release/Nipeno/nightzoom-fps-limiter)](https://github.com/Nipeno/nightzoom-fps-limiter/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue)](LICENSE)
 
+**NightZoom Partnered**
+
 Locks your game to a smooth **60 FPS**. A simple add-on for [ReShade](https://reshade.me) with
 one button - turn it on to cap, turn it off to unlock.
 

@@ -56,6 +56,10 @@ The **Troubleshooting** sections of the bundled `Install Guide.html` cover the r
 not opening (try both **Home** and **Insert**; some setups remap the key), and what to do if you're
 on a ReShade older than 6.1.
 
+The add-on's window can be moved, resized, or dragged into ReShade's own panel to sit next to
+**Home** and **Settings** - ReShade remembers wherever you leave it, so it comes back the same way
+next launch.
+
 One that catches people out: **turn off VSync in-game.** The limiter and VSync both wait for
 their own timing, and running them together can stack those waits into stutter or an effective
 30 FPS. Use one or the other - this add-on instead of VSync.
@@ -66,6 +70,11 @@ Found a bug, or something won't install?
 **[Open an issue](https://github.com/Nipeno/nightzoom-fps-limiter/issues/new/choose)** - bug
 reports and questions are both handled on GitHub, so answers stay searchable for the next person
 who hits the same thing.
+
+If the overlay never shows up, attach your **`ReShade.log`** to the issue. It sits next to ReShade
+itself (in the same folder as the `.dll` you installed - for FiveM that's
+`%LOCALAPPDATA%\FiveM\FiveM.app\plugins`), and the add-on writes to it, so it usually says exactly
+what went wrong.
 
 Not on the NightZoom server yet? The Discord is at <https://discord.gg/nightzoom> - that's the
 place to get onto the server, not the place to report add-on bugs.

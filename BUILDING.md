@@ -110,7 +110,19 @@ that user's ReShade predates 6.1 and needs updating.
 - **Persistence** - the checkbox value is read in `init_effect_runtime` and written on toggle via
   `reshade::get/set_config_value` under the `[NZ-FPS-Limiter]` config section.
 - **Overlay** - registered with a named title via `reshade::register_overlay`, so it appears as its
-  own window in the ReShade menu.
+  own window in the ReShade menu. ReShade draws addon overlays with a plain `ImGui::Begin`, and
+  pipes ImGui's settings handlers into `ReShade.ini` (`[OVERLAY] Window=` / `Docking=`) instead of
+  an `imgui.ini` - so position, size, collapsed state and dock slot are persisted for us, keyed by
+  the **window title**. Renaming the overlay would discard every user's saved layout. We only set a
+  first-run size/position with `ImGuiCond_FirstUseEver`, which a saved entry overrides.
+  Docking the window into ReShade's own Home/Add-ons/Settings tab group by default is not possible
+  from an addon: ReShade builds that layout with the `DockBuilder*` API, which is ImGui-internal and
+  absent from `ReShadeGetImGuiFunctionTable()`, and the node IDs it generates are not derivable.
+  Users can still drag the window in themselves, and that choice sticks.
+- **Logging** - `nz_log()` wraps `reshade::log_message`, so everything lands in `ReShade.log`
+  alongside ReShade's own lines. Load, effect-runtime init (with the graphics API in use), the first
+  present, and any failure are logged at INFO/WARN; routine detail (config read, toggles, teardown)
+  is DEBUG and only appears when the user raises ReShade's log level. Nothing is logged per frame.
 - **Logo** - embedded as a byte array in [`src/logo_data.h`](src/logo_data.h), decoded from memory
   via WIC and uploaded as a ReShade texture (`create_resource` / `create_resource_view`), freed in
   `destroy_effect_runtime`. If decoding ever fails, a bordered `[ NightZoom FPS Limiter logo ]` placeholder is

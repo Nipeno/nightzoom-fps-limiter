@@ -16,8 +16,12 @@
 //    the previous present and, when the limiter is enabled, block until exactly one
 //    60 FPS frame interval has elapsed using a high-resolution waitable timer for the
 //    bulk of the wait plus a short busy-wait for sub-millisecond accuracy.
-//  - The overlay callback draws a dedicated "NightZoom FPS Limiter" window.
+//  - The overlay callback draws a dedicated "NightZoom FPS Limiter" window. ReShade
+//    remembers that window's position, size and dock slot for us, in ReShade.ini.
 //  - The checkbox state is persisted via ReShade's own config (no custom file).
+//  - Startup, initialisation and failures are written to ReShade.log, so a user can
+//    send that one file when asking for support. Routine detail is logged at DEBUG,
+//    which only appears when the user raises ReShade's log level.
 
 // ImGui only made ImTextureID default to ImU64 in 1.92. We build against 1.90.4 (19040) so the
 // addon targets ReShade addon API 11 and loads on the older ReShade that graphics packs ship, and
@@ -39,6 +43,8 @@
 #include <atomic>
 #include <vector>
 #include <string>
+#include <cstdarg>          // Variadic logging helper
+#include <cstdio>           // vsnprintf
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -69,11 +75,53 @@ static constexpr const char *kGithubUrl  = "https://github.com/Nipeno/nightzoom-
 #endif
 
 // ---------------------------------------------------------------------------
+// Logging
+// ---------------------------------------------------------------------------
+
+// printf-style wrapper around reshade::log_message; the line lands in ReShade.log.
+// info/warning/error are always visible; debug only shows when the user raises
+// ReShade's log level, which is the escape hatch for deeper support requests.
+static void nz_log(reshade::log_level level, const char *fmt, ...)
+{
+	char buf[512];
+
+	va_list args;
+	va_start(args, fmt);
+	const int written = vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
+
+	if (written < 0)
+		return; // Formatting failed; nothing useful to log.
+
+	reshade::log_message(level, buf);
+}
+
+// Human-readable graphics API, so a user's log says which renderer we attached to.
+static const char *device_api_name(reshade::api::device_api api)
+{
+	switch (api)
+	{
+	case reshade::api::device_api::d3d9:   return "D3D9";
+	case reshade::api::device_api::d3d10:  return "D3D10";
+	case reshade::api::device_api::d3d11:  return "D3D11";
+	case reshade::api::device_api::d3d12:  return "D3D12";
+	case reshade::api::device_api::opengl: return "OpenGL";
+	case reshade::api::device_api::vulkan: return "Vulkan";
+	default:                               return "unknown";
+	}
+}
+
+// ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
 // Read in the present callback every frame; toggled in the overlay callback.
 static std::atomic<bool> g_limit_enabled{ false };
+
+// Set on the first present we ever see, so the log can prove the pacing callback
+// really runs (as opposed to "add-on registered, but events never reach us").
+// Atomic because a process can drive more than one swapchain.
+static std::atomic<bool> g_first_present_logged{ false };
 
 using clock_type = std::chrono::high_resolution_clock;
 static clock_type::time_point g_last_present = clock_type::now();
@@ -101,6 +149,11 @@ static void on_present(reshade::api::command_queue *, reshade::api::swapchain *,
                        const reshade::api::rect *, const reshade::api::rect *,
                        uint32_t, const reshade::api::rect *)
 {
+	// One line, once per process: past this point the frame pacing path is live.
+	if (!g_first_present_logged.exchange(true, std::memory_order_relaxed))
+		nz_log(reshade::log_level::info, "First frame presented; limiter %s.",
+		       g_limit_enabled.load(std::memory_order_relaxed) ? "enabled" : "disabled");
+
 	if (!g_limit_enabled.load(std::memory_order_relaxed))
 	{
 		// No cap: just keep the timestamp fresh so re-enabling does not over-sleep.
@@ -210,7 +263,10 @@ static void load_logo_texture(reshade::api::effect_runtime *runtime)
 	std::vector<uint8_t> pixels;
 	uint32_t w = 0, h = 0;
 	if (!decode_png_rgba(pixels, w, h))
+	{
+		nz_log(reshade::log_level::warning, "Logo PNG decode failed; drawing placeholder.");
 		return; // Decode failed -> placeholder is drawn instead.
+	}
 
 	reshade::api::device *device = runtime->get_device();
 
@@ -222,12 +278,16 @@ static void load_logo_texture(reshade::api::effect_runtime *runtime)
 
 	reshade::api::resource res = { 0 };
 	if (!device->create_resource(desc, &initial, reshade::api::resource_usage::shader_resource, &res))
+	{
+		nz_log(reshade::log_level::warning, "Logo texture creation failed (resource); drawing placeholder.");
 		return;
+	}
 
 	reshade::api::resource_view view = { 0 };
 	if (!device->create_resource_view(res, reshade::api::resource_usage::shader_resource,
 	                                  reshade::api::resource_view_desc(reshade::api::format::r8g8b8a8_unorm), &view))
 	{
+		nz_log(reshade::log_level::warning, "Logo texture creation failed (view); drawing placeholder.");
 		device->destroy_resource(res);
 		return;
 	}
@@ -256,15 +316,26 @@ static void free_logo_texture()
 
 static void on_init_effect_runtime(reshade::api::effect_runtime *runtime)
 {
+	nz_log(reshade::log_level::info, "Effect runtime initialised (device API: %s).",
+	       device_api_name(runtime->get_device()->get_api()));
+
 	bool value = false;
 	if (reshade::get_config_value(runtime, kConfigSection, kConfigKey, value))
+	{
 		g_limit_enabled.store(value, std::memory_order_relaxed);
+		nz_log(reshade::log_level::debug, "Loaded %s=%d from config.", kConfigKey, value ? 1 : 0);
+	}
+	else
+	{
+		nz_log(reshade::log_level::debug, "No saved config; limiter starts disabled.");
+	}
 
 	load_logo_texture(runtime);
 }
 
 static void on_destroy_effect_runtime(reshade::api::effect_runtime *)
 {
+	nz_log(reshade::log_level::debug, "Effect runtime destroyed.");
 	free_logo_texture();
 }
 
@@ -308,6 +379,16 @@ static void draw_logo()
 
 static void draw_overlay(reshade::api::effect_runtime *runtime)
 {
+	// First run only: a deliberate size and spot instead of wherever ImGui lands.
+	// ReShade persists this window's position, size, collapsed state and dock slot in
+	// ReShade.ini ([OVERLAY] Window=/Docking=, keyed by the window title), and
+	// ImGuiCond_FirstUseEver is ignored once that saved entry exists - so whatever the
+	// user drags it to, including into ReShade's docked panel, always wins afterwards.
+	// x at 45% of the screen keeps it clear of ReShade's own left-hand dock column.
+	const ImVec2 display = ImGui::GetIO().DisplaySize;
+	ImGui::SetWindowSize(ImVec2(320.0f, 0.0f), ImGuiCond_FirstUseEver); // 0 height = fit contents
+	ImGui::SetWindowPos(ImVec2(display.x * 0.45f, display.y * 0.20f), ImGuiCond_FirstUseEver);
+
 	draw_logo();
 	ImGui::Spacing();
 
@@ -317,6 +398,7 @@ static void draw_overlay(reshade::api::effect_runtime *runtime)
 		g_limit_enabled.store(enabled, std::memory_order_relaxed);
 		g_last_present = clock_type::now(); // Reset pacing baseline on toggle.
 		reshade::set_config_value(runtime, kConfigSection, kConfigKey, enabled);
+		nz_log(reshade::log_level::debug, "Limiter %s.", enabled ? "enabled" : "disabled");
 	}
 
 	ImGui::Spacing();
@@ -360,12 +442,21 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID)
 		// High-resolution waitable timer (Win10 1803+). Null on older OS -> sleep fallback.
 		g_timer = CreateWaitableTimerExW(nullptr, nullptr,
 			CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+		if (g_timer == nullptr)
+			nz_log(reshade::log_level::warning,
+			       "High-resolution timer unavailable (error %lu); using the sleep fallback.",
+			       GetLastError());
+		nz_log(reshade::log_level::info, "NightZoom FPS Limiter v%s loaded - cap 60 FPS, wait path: %s.",
+		       NZ_VERSION_STR, g_timer != nullptr ? "high-resolution timer" : "sleep fallback");
 		reshade::register_event<reshade::addon_event::init_effect_runtime>(on_init_effect_runtime);
 		reshade::register_event<reshade::addon_event::destroy_effect_runtime>(on_destroy_effect_runtime);
 		reshade::register_event<reshade::addon_event::present>(on_present);
+		// The title is also the key ReShade stores this window's layout under in
+		// ReShade.ini - renaming it throws away every user's saved position/dock slot.
 		reshade::register_overlay("NightZoom FPS Limiter", draw_overlay);
 		break;
 	case DLL_PROCESS_DETACH:
+		nz_log(reshade::log_level::debug, "Unloading.");
 		reshade::unregister_addon(hModule);
 		if (g_timer != nullptr)
 			CloseHandle(g_timer);

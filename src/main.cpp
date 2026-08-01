@@ -87,7 +87,7 @@ static void nz_log(reshade::log_level level, const char *fmt, ...)
 
 	va_list args;
 	va_start(args, fmt);
-	const int written = vsnprintf(buf, sizeof(buf), fmt, args);
+	const int written = std::vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
 	if (written < 0)

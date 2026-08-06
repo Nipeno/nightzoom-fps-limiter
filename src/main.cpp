@@ -386,7 +386,9 @@ static void draw_overlay(reshade::api::effect_runtime *runtime)
 	// user drags it to, including into ReShade's docked panel, always wins afterwards.
 	// x at 45% of the screen keeps it clear of ReShade's own left-hand dock column.
 	const ImVec2 display = ImGui::GetIO().DisplaySize;
-	ImGui::SetWindowSize(ImVec2(320.0f, 0.0f), ImGuiCond_FirstUseEver); // 0 height = fit contents
+	// 0 on both axes = auto-fit to the contents. A fixed width would clip the URL
+	// labels, and by how much depends on the user's ReShade font size.
+	ImGui::SetWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_FirstUseEver);
 	ImGui::SetWindowPos(ImVec2(display.x * 0.45f, display.y * 0.20f), ImGuiCond_FirstUseEver);
 
 	draw_logo();

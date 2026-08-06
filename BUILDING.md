@@ -110,7 +110,24 @@ that user's ReShade predates 6.1 and needs updating.
 - **Persistence** - the checkbox value is read in `init_effect_runtime` and written on toggle via
   `reshade::get/set_config_value` under the `[NZ-FPS-Limiter]` config section.
 - **Overlay** - registered with a named title via `reshade::register_overlay`, so it appears as its
-  own window in the ReShade menu.
+  own window in the ReShade menu. ReShade draws addon overlays with a plain `ImGui::Begin`, and
+  pipes ImGui's settings handlers into `ReShade.ini` (`[OVERLAY] Window=` / `Docking=`) instead of
+  an `imgui.ini` - so position, size, collapsed state and dock slot are persisted for us, keyed by
+  the **window title**. Renaming the overlay would discard every user's saved layout. We only set a
+  first-run size/position with `ImGuiCond_FirstUseEver`, which a saved entry overrides.
+  Docking the window into ReShade's own Home/Add-ons/Settings tab group by default is not possible
+  from an addon: ReShade builds that layout with the `DockBuilder*` API, which is ImGui-internal and
+  absent from `ReShadeGetImGuiFunctionTable()`, and the node IDs it generates are not derivable.
+  Users can still drag the window in themselves, and that choice sticks.
+- **Logging** - `nz_log()` wraps `reshade::log_message`, so everything lands in `ReShade.log`
+  alongside ReShade's own lines, prefixed with the add-on name. Load, effect-runtime init (with the
+  graphics API in use), the first present, and any failure are logged at INFO/WARN; routine detail
+  (config read, teardown) is DEBUG. Note that **ReShade has no runtime log level** - the
+  `ReShadeLogMessage` export (`source/addon.cpp`) passes every message straight to
+  `reshade::log::message`, and `RESHADE_VERBOSE_LOG` is a compile-time define affecting only
+  ReShade's own callsites. So DEBUG lines are always written too, and the level is severity
+  labelling for whoever reads the log rather than a filter - which is why nothing is logged per
+  frame.
 - **Logo** - embedded as a byte array in [`src/logo_data.h`](src/logo_data.h), decoded from memory
   via WIC and uploaded as a ReShade texture (`create_resource` / `create_resource_view`), freed in
   `destroy_effect_runtime`. If decoding ever fails, a bordered `[ NightZoom FPS Limiter logo ]` placeholder is

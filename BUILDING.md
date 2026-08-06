@@ -122,7 +122,7 @@ that user's ReShade predates 6.1 and needs updating.
 - **Logging** - `nz_log()` wraps `reshade::log_message`, so everything lands in `ReShade.log`
   alongside ReShade's own lines, prefixed with the add-on name. Load, effect-runtime init (with the
   graphics API in use), the first present, and any failure are logged at INFO/WARN; routine detail
-  (config read, toggles, teardown) is DEBUG. Note that **ReShade has no runtime log level** - the
+  (config read, teardown) is DEBUG. Note that **ReShade has no runtime log level** - the
   `ReShadeLogMessage` export (`source/addon.cpp`) passes every message straight to
   `reshade::log::message`, and `RESHADE_VERBOSE_LOG` is a compile-time define affecting only
   ReShade's own callsites. So DEBUG lines are always written too, and the level is severity

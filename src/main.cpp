@@ -402,7 +402,6 @@ static void draw_overlay(reshade::api::effect_runtime *runtime)
 		g_limit_enabled.store(enabled, std::memory_order_relaxed);
 		g_last_present = clock_type::now(); // Reset pacing baseline on toggle.
 		reshade::set_config_value(runtime, kConfigSection, kConfigKey, enabled);
-		nz_log(reshade::log_level::debug, "Limiter %s.", enabled ? "enabled" : "disabled");
 	}
 
 	ImGui::Spacing();

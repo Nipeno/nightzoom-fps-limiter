@@ -14,9 +14,10 @@ Every release bundles whatever ReShade was latest at build time; the exact versi
 - The add-on now writes to `ReShade.log`: a line on load (version and which timing path it uses),
   one when the graphics runtime is ready (including whether the game is running D3D11, D3D12, etc.),
   one on the first rendered frame, and a warning for anything that fails. If the overlay doesn't
-  appear, that log now says why — attach it to a bug report. Routine detail (saved setting read,
-  on/off toggles) is logged at debug level. Every line is written regardless of level, and they're
-  all tagged `[NightZoom FPS Limiter]`, so there's nothing to switch on first.
+  appear, that log now says why — attach it to a bug report. Routine detail (the saved setting being
+  read, shutdown) is logged at debug level. Every line is tagged `[NightZoom FPS Limiter]` and is
+  written regardless of level, so there's nothing to switch on first. A healthy launch adds five
+  lines and then stays quiet — nothing is logged per frame.
 - The add-on's window now opens at a sensible size and position the first time, instead of wherever
   it happened to land. Move, resize or dock it and ReShade keeps that layout across restarts, as
   before.

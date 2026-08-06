@@ -20,8 +20,8 @@
 //    remembers that window's position, size and dock slot for us, in ReShade.ini.
 //  - The checkbox state is persisted via ReShade's own config (no custom file).
 //  - Startup, initialisation and failures are written to ReShade.log, so a user can
-//    send that one file when asking for support. Routine detail is logged at DEBUG,
-//    which only appears when the user raises ReShade's log level.
+//    send that one file when asking for support. Routine detail is logged at DEBUG;
+//    ReShade writes every level, so the level is severity labelling, not filtering.
 
 // ImGui only made ImTextureID default to ImU64 in 1.92. We build against 1.90.4 (19040) so the
 // addon targets ReShade addon API 11 and loads on the older ReShade that graphics packs ship, and
@@ -78,9 +78,11 @@ static constexpr const char *kGithubUrl  = "https://github.com/Nipeno/nightzoom-
 // Logging
 // ---------------------------------------------------------------------------
 
-// printf-style wrapper around reshade::log_message; the line lands in ReShade.log.
-// info/warning/error are always visible; debug only shows when the user raises
-// ReShade's log level, which is the escape hatch for deeper support requests.
+// printf-style wrapper around reshade::log_message; the line lands in ReShade.log,
+// prefixed with the add-on name. ReShade has no runtime log level - ReShadeLogMessage
+// writes whatever it is given (source/addon.cpp -> reshade::log::message) - so the
+// level here labels severity for whoever reads the log, it does not filter anything.
+// That is exactly why nothing is logged per frame.
 static void nz_log(reshade::log_level level, const char *fmt, ...)
 {
 	char buf[512];

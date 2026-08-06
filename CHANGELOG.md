@@ -10,6 +10,8 @@ Every release bundles whatever ReShade was latest at build time; the exact versi
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-08-07
+
 ### Added
 - The add-on now writes to `ReShade.log`: a line on load (version and which timing path it uses),
   one when the graphics runtime is ready (including whether the game is running D3D11, D3D12, etc.),
@@ -21,6 +23,11 @@ Every release bundles whatever ReShade was latest at build time; the exact versi
 - The add-on's window now opens at a sensible size and position the first time, instead of wherever
   it happened to land. Move, resize or dock it and ReShade keeps that layout across restarts, as
   before.
+
+### Changed
+- The bundled ReShade is now **6.8.0** (was 6.7.3). Nothing about the add-on changes because of it —
+  it still loads on any ReShade from 6.1 onwards, and if you already have ReShade from a graphics
+  pack you can keep it.
 
 ## [2.4.1] - 2026-07-30
 
@@ -147,7 +154,8 @@ Initial release.
 - GPLv3 license, a "View Source on GitHub" button in the overlay, and split user/developer docs.
 - GitHub Actions build targeting ReShade addon API 18 (SDK v6.7.3).
 
-[Unreleased]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.4.1...HEAD
+[Unreleased]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.5.0...HEAD
+[2.5.0]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.4.1...v2.5.0
 [2.4.1]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/Nipeno/nightzoom-fps-limiter/compare/v2.2.0...v2.3.0

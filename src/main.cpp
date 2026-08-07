@@ -468,3 +468,5 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID)
 	}
 	return TRUE;
 }
+
+// ci: filter verification, reverted before merge

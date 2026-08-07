@@ -145,19 +145,39 @@ pngquant --quality=70-90 --strip --force --output /tmp/logo.png /tmp/logo.png   
 
 ## Release bundle (CI)
 
-Two workflows, deliberately split so only one of them can write to the repo:
+Two build workflows, deliberately split so only one of them can write to the repo, plus a
+maintenance job:
 
-- [`build.yml`](.github/workflows/build.yml) — dev CI. Runs on push/PR, `permissions: contents:
-  read`, builds at version `0.0.0` and uploads the bundle as an artifact. Publishes nothing.
+- [`build.yml`](.github/workflows/build.yml) — dev CI. Runs on push to `main` and on PRs,
+  `permissions: contents: read`, builds at version `0.0.0` and uploads the bundle as an artifact.
+  Publishes nothing. A `concurrency` group cancels the previous in-flight run when you push again,
+  and `paths-ignore` skips the whole build for docs-only changes (`*.md`, `docs/**`, issue/PR
+  templates, `labels.yml`, `LICENSE`) — so a docs PR gets no Build check at all, by design.
+  `packaging/**` is deliberately *not* ignored: those files ship inside the zip.
+  Note the filter is evaluated per *event*, not per commit: on a PR it looks at every file the PR
+  changes, so a docs-only commit pushed onto a PR that also touches code still builds. Only a PR
+  (or a push to `main`) that is entirely docs is skipped.
 - [`release.yml`](.github/workflows/release.yml) — runs on a `v*` tag with `contents: write`,
   builds at the tag's version and attaches the zip to the GitHub Release. A manual
   `workflow_dispatch` run is a dry run: it builds and uploads an artifact but creates no Release.
+  Its concurrency group uses `cancel-in-progress: false` — a publish must never be killed half-way.
+- [`reshade-watch.yml`](.github/workflows/reshade-watch.yml) — weekly (Mondays 06:00 UTC) and
+  manual. Scrapes reshade.me and, when a newer version than the pinned fallback ships, opens a PR
+  bumping that pin. If the scrape itself breaks, the run goes **red** — that is the point, since
+  otherwise a broken scrape only shows up mid-release. A `pretend_version` dispatch input exercises
+  the PR path on demand. Note that PRs it opens carry no Build check: PRs created with the workflow
+  token don't start other workflows.
 
-Both assemble the same drag-and-drop bundle for end users. After compiling the addon they:
+Both build workflows assemble the same drag-and-drop bundle for end users. After compiling the
+addon they:
 
-1. **Resolve the latest ReShade** - scrape `https://reshade.me/` for
-   `ReShade_Setup_<version>_Addon.exe`. If scraping fails (site change / rate-limit), it falls
-   back to a pinned version (`6.7.3`) so the build never breaks.
+1. **Resolve the latest ReShade** via the shared composite action
+   [`.github/actions/fetch-reshade`](.github/actions/fetch-reshade/action.yml) - scrape
+   `https://reshade.me/` for `ReShade_Setup_<version>_Addon.exe`. If scraping fails (site change /
+   rate-limit), it falls back to the pinned version in that action's `fallback` input default
+   (currently `6.8.0`) so the build never breaks. **That default is the only copy of the pin** —
+   the fetch used to be duplicated in both workflows, which is what the composite action exists to
+   prevent. It is unrelated to the SDK pin in `deps/reshade` (6.1.0 / API 11), which must stay put.
 2. **Download + extract** the add-on-enabled installer and pull out `ReShade64.dll` via
    `7z e ReShade_Setup.exe ReShade64.dll`, then copy it to **`dxgi.dll`** (the name FiveM loads
    ReShade under from its `plugins` folder).
@@ -169,6 +189,14 @@ The zip name carries the **addon** version (from the tag), which is why the bund
 version is recorded in `reshade-version.txt` inside the zip instead. The end-user install guide
 lives in `packaging/Install Guide.html` - users who already have ReShade just skip the `dxgi.dll`
 / enable steps (the guide says where).
+
+### Labels
+
+Issue/PR labels are declared in [`.github/labels.yml`](.github/labels.yml) and applied with
+`./.github/sync-labels.sh`. The script creates or updates every label in the manifest, then reports
+any label that exists on the repo but isn't declared — pass `--prune` to actually delete those. The
+dry-run default is deliberate: deleting a label also strips it from every issue and PR that carried
+it.
 
 ### `Enable-ReShade.bat` (FiveM unblock helper)
 

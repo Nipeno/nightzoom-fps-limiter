@@ -151,8 +151,11 @@ maintenance job:
 - [`build.yml`](.github/workflows/build.yml) — dev CI. Runs on push to `main` and on PRs,
   `permissions: contents: read`, builds at version `0.0.0` and uploads the bundle as an artifact.
   Publishes nothing. A `concurrency` group cancels the previous in-flight run when you push again,
-  and `paths-ignore` skips the whole build for docs-only changes (`*.md`, `docs/**`, issue/PR
-  templates, `labels.yml`, `LICENSE`) — so a docs PR gets no Build check at all, by design.
+  and `paths-ignore` skips the whole build for docs-only changes — so a docs PR gets no Build check
+  at all, by design. The ignored set is exactly `**/*.md`, `docs/**`, `.github/ISSUE_TEMPLATE/**`,
+  `.github/PULL_REQUEST_TEMPLATE.md`, `.github/labels.yml`, `.github/sync-labels.sh` and `LICENSE`
+  (note `**/*.md`, not `*.md`: a single `*` doesn't match across `/`, so it would only cover
+  markdown at the repo root).
   `packaging/**` is deliberately *not* ignored: those files ship inside the zip.
   Note the filter is evaluated per *event*, not per commit: on a PR it looks at every file the PR
   changes, so a docs-only commit pushed onto a PR that also touches code still builds. Only a PR

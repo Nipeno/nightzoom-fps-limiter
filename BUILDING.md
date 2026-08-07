@@ -154,6 +154,9 @@ maintenance job:
   and `paths-ignore` skips the whole build for docs-only changes (`*.md`, `docs/**`, issue/PR
   templates, `labels.yml`, `LICENSE`) — so a docs PR gets no Build check at all, by design.
   `packaging/**` is deliberately *not* ignored: those files ship inside the zip.
+  Note the filter is evaluated per *event*, not per commit: on a PR it looks at every file the PR
+  changes, so a docs-only commit pushed onto a PR that also touches code still builds. Only a PR
+  (or a push to `main`) that is entirely docs is skipped.
 - [`release.yml`](.github/workflows/release.yml) — runs on a `v*` tag with `contents: write`,
   builds at the tag's version and attaches the zip to the GitHub Release. A manual
   `workflow_dispatch` run is a dry run: it builds and uploads an artifact but creates no Release.

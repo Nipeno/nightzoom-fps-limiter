@@ -187,6 +187,14 @@ version is recorded in `reshade-version.txt` inside the zip instead. The end-use
 lives in `packaging/Install Guide.html` - users who already have ReShade just skip the `dxgi.dll`
 / enable steps (the guide says where).
 
+### Labels
+
+Issue/PR labels are declared in [`.github/labels.yml`](.github/labels.yml) and applied with
+`./.github/sync-labels.sh`. The script creates or updates every label in the manifest, then reports
+any label that exists on the repo but isn't declared — pass `--prune` to actually delete those. The
+dry-run default is deliberate: deleting a label also strips it from every issue and PR that carried
+it.
+
 ### `Enable-ReShade.bat` (FiveM unblock helper)
 
 `packaging/Enable-ReShade.bat` is bundled into the zip. FiveM blocks ReShade 5+ until the

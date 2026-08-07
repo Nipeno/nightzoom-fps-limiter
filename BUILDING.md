@@ -167,6 +167,10 @@ maintenance job:
   otherwise a broken scrape only shows up mid-release. A `pretend_version` dispatch input exercises
   the PR path on demand. Note that PRs it opens carry no Build check: PRs created with the workflow
   token don't start other workflows.
+  This job needs **Settings → Actions → General → "Allow GitHub Actions to create and approve pull
+  requests"** enabled (repo API field `can_approve_pull_request_reviews`). It is off by default, and
+  without it the run gets as far as pushing the branch and then fails with
+  `GitHub Actions is not permitted to create or approve pull requests`.
 
 Both build workflows assemble the same drag-and-drop bundle for end users. After compiling the
 addon they:

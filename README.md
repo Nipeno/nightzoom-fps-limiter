@@ -47,23 +47,6 @@ when *you* click the Discord or GitHub buttons), and it doesn't touch your game'
 The full source code is right here in this repo, and there's a **View Source on GitHub** button
 inside the add-on too.
 
-## Troubleshooting
-
-Already have ReShade from a graphics pack? **Just add the add-on and change nothing else.** It works
-with any ReShade from **6.1 onwards**, so there's no need to replace what you have.
-
-The **Troubleshooting** sections of the bundled `Install Guide.html` cover the rest - the overlay
-not opening (try both **Home** and **Insert**; some setups remap the key), and what to do if you're
-on a ReShade older than 6.1.
-
-The add-on's window can be moved, resized, or dragged into ReShade's own panel to sit next to
-**Home** and **Settings** - ReShade remembers wherever you leave it, so it comes back the same way
-next launch.
-
-One that catches people out: **turn off VSync in-game.** The limiter and VSync both wait for
-their own timing, and running them together can stack those waits into stutter or an effective
-30 FPS. Use one or the other - this add-on instead of VSync.
-
 ## Support
 
 Found a bug, or something won't install?

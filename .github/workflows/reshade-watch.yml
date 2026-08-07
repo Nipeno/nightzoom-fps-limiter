@@ -1,0 +1,124 @@
+name: ReShade watch
+
+# Every build downloads whatever ReShade is current, so the pinned fallback in
+# .github/actions/fetch-reshade only matters on a day reshade.me is unreachable - which
+# is exactly the day a release would otherwise ship something years old. This job keeps
+# that pin fresh by opening a PR, and goes red if the scrape itself ever breaks.
+#
+# It never touches deps/reshade or deps/imgui: those are the addon API 11 / ImGui 19040
+# compatibility floor and are deliberately old. See BUILDING.md.
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Mondays, 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      pretend_version:
+        description: 'Pretend reshade.me published this version (for testing the PR path)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve latest ReShade and compare with the pin
+        id: check
+        env:
+          PRETEND: ${{ inputs.pretend_version }}
+        run: |
+          set -euo pipefail
+          action='.github/actions/fetch-reshade/action.yml'
+
+          if [ -n "$PRETEND" ]; then
+            latest="$PRETEND"
+            echo "Pretending reshade.me published $latest"
+          else
+            html=$(curl -fsSL -A 'Mozilla/5.0' https://reshade.me/)
+            latest=$(printf '%s' "$html" \
+              | grep -oE 'ReShade_Setup_[0-9]+\.[0-9]+(\.[0-9]+)?_Addon\.exe' \
+              | head -1 | sed -E 's/^ReShade_Setup_(.+)_Addon\.exe$/\1/')
+          fi
+
+          # Refuse anything that is not a plain version number: this string ends up in a
+          # branch name, a commit message and a file, so it must never carry shell syntax.
+          if ! printf '%s' "$latest" | grep -qE '^[0-9]+\.[0-9]+(\.[0-9]+)?$'; then
+            echo "::error::Could not read a version from reshade.me (got '${latest}'). The page layout probably changed - fix the scrape in $action and here."
+            exit 1
+          fi
+
+          current=$(grep -E "^    default: '" "$action" | head -1 | sed -E "s/^    default: '(.*)'$/\1/")
+          echo "pinned=$current  latest=$latest"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+
+          if [ "$current" = "$latest" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Pin is current; nothing to do."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open the bump PR
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LATEST: ${{ steps.check.outputs.latest }}
+          CURRENT: ${{ steps.check.outputs.current }}
+        run: |
+          set -euo pipefail
+          branch="chore/reshade-$LATEST"
+
+          if [ -n "$(gh pr list --head "$branch" --state open --json number --jq '.[].number')" ]; then
+            echo "A PR for $branch is already open; nothing to do."
+            exit 0
+          fi
+
+          action='.github/actions/fetch-reshade/action.yml'
+          # The pin is the action's only input default. Bail rather than guess if that
+          # ever stops being true, so a second input can't get silently rewritten.
+          matches=$(grep -cE "^    default: '" "$action")
+          if [ "$matches" -ne 1 ]; then
+            echo "::error::Expected exactly one input default in $action, found $matches."
+            exit 1
+          fi
+          sed -i -E "s/^    default: '.*'\$/    default: '$LATEST'/" "$action"
+          if git diff --quiet -- "$action"; then
+            echo "::error::sed changed nothing in $action - the pin's format moved, fix the pattern here."
+            exit 1
+          fi
+
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git checkout -b "$branch"
+          git commit -qam "ci: bump the ReShade fallback pin to $LATEST"
+          git push -q origin "$branch"
+
+          # Heredoc rather than an inline string: continuation lines inside a YAML block
+          # scalar would keep their indentation and markdown would render them as code.
+          cat > /tmp/pr-body.md <<EOF
+          reshade.me now serves **$LATEST**; the pinned fallback was **$CURRENT**.
+
+          Builds already download the latest ReShade at build time, so this only changes what gets
+          bundled on a day reshade.me is unreachable. The add-on's compatibility floor is unaffected -
+          \`deps/reshade\` stays on 6.1.0 (addon API 11) and is untouched here.
+
+          Note that PRs opened by the workflow token do not start other workflows, so there is no
+          Build check on this PR; \`main\` builds on merge.
+
+          Opened automatically by \`.github/workflows/reshade-watch.yml\`.
+          EOF
+
+          gh pr create \
+            --base main --head "$branch" --label 'area:ci' \
+            --title "ci: bump the ReShade fallback pin to $LATEST" \
+            --body-file /tmp/pr-body.md

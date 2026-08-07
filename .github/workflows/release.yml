@@ -13,6 +13,12 @@ on:
 permissions:
   contents: write   # attach assets to the Release
 
+# Serialise releases per ref, but never cancel one: killing a publish half-way could
+# leave a Release created with no asset attached.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: windows-2022
@@ -47,28 +53,10 @@ jobs:
         run: cmake --build build --config Release
 
       # --- Fetch the latest official ReShade (add-on build) -----------------
+      # Shared with build.yml; the pinned fallback lives in the action.
       - name: Resolve + download latest ReShade
-        run: |
-          $fallback = '6.7.3'
-          $ver = $fallback
-          try {
-            $html = (Invoke-WebRequest -Uri 'https://reshade.me/' -UseBasicParsing -UserAgent 'Mozilla/5.0').Content
-            $m = [regex]::Match($html, 'ReShade_Setup_([0-9.]+)_Addon\.exe')
-            if ($m.Success) { $ver = $m.Groups[1].Value }
-          } catch {
-            Write-Host "::warning::Could not scrape reshade.me ($($_.Exception.Message)); using pinned $fallback"
-          }
-          Write-Host "Using ReShade version: $ver"
-          "reshade_version=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-
-          $url = "https://reshade.me/downloads/ReShade_Setup_${ver}_Addon.exe"
-          curl.exe -fL -A 'Mozilla/5.0' -o ReShade_Setup.exe $url
-          7z e ReShade_Setup.exe ReShade64.dll -y
-          if (-not (Test-Path ReShade64.dll) -or ((Get-Item ReShade64.dll).Length -lt 100000)) {
-            Write-Error "ReShade64.dll was not extracted correctly (download may have failed)."
-            exit 1
-          }
-          Copy-Item ReShade64.dll dxgi.dll -Force   # FiveM loads ReShade as dxgi.dll
+        id: reshade
+        uses: ./.github/actions/fetch-reshade
 
       # --- Assemble the drag-and-drop bundle --------------------------------
       - name: Assemble bundle
@@ -83,7 +71,7 @@ jobs:
           Copy-Item third_party/Dear-ImGui-LICENSE.txt   dist/
           Copy-Item LICENSE                              dist/LICENSE.txt
           # The zip name carries the addon version, so record the bundled ReShade here.
-          "$env:reshade_version" | Out-File -FilePath dist/reshade-version.txt -Encoding utf8 -NoNewline
+          "${{ steps.reshade.outputs.version }}" | Out-File -FilePath dist/reshade-version.txt -Encoding utf8 -NoNewline
           $zip = "NZ-FPS-Limiter_v$env:nz_version.zip"
           Compress-Archive -Path dist/* -DestinationPath $zip -Force
           "bundle_zip=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
@@ -112,7 +100,7 @@ jobs:
             **Install:** download the zip, extract it, and open **`Install Guide.html`** -
             follow the steps. (It bundles ReShade, so it's all you need.)
 
-            Bundled ReShade: **${{ env.reshade_version }}**.
+            Bundled ReShade: **${{ steps.reshade.outputs.version }}**.
 
             Something not working? [Open an issue](https://github.com/Nipeno/nightzoom-fps-limiter/issues/new/choose).
             Open source (GPLv3).

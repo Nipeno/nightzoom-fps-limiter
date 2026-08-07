@@ -1,0 +1,50 @@
+name: Fetch ReShade
+description: >-
+  Resolve the latest official add-on-enabled ReShade, download it, and leave the 64-bit
+  runtime in the workspace as dxgi.dll. Shared by build.yml and release.yml so the
+  pinned fallback version exists in exactly one place.
+
+inputs:
+  fallback:
+    description: >-
+      ReShade version used when reshade.me cannot be scraped, so a build never breaks
+      because the site changed or rate-limited us. This is THE pin - reshade-watch.yml
+      opens a PR against this default when a newer version ships. Unrelated to the
+      addon API pin in deps/reshade, which must stay at 6.1.0 (API 11).
+    required: false
+    default: '6.8.0'
+
+outputs:
+  version:
+    description: The ReShade version that was actually downloaded.
+    value: ${{ steps.fetch.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - id: fetch
+      shell: pwsh
+      run: |
+        $fallback = '${{ inputs.fallback }}'
+        $ver = $fallback
+        try {
+          $html = (Invoke-WebRequest -Uri 'https://reshade.me/' -UseBasicParsing -UserAgent 'Mozilla/5.0').Content
+          $m = [regex]::Match($html, 'ReShade_Setup_([0-9.]+)_Addon\.exe')
+          if ($m.Success) { $ver = $m.Groups[1].Value }
+        } catch {
+          Write-Host "::warning::Could not scrape reshade.me ($($_.Exception.Message)); using pinned $fallback"
+        }
+        Write-Host "Using ReShade version: $ver"
+        "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+        $url = "https://reshade.me/downloads/ReShade_Setup_${ver}_Addon.exe"
+        Write-Host "Downloading $url"
+        curl.exe -fL -A 'Mozilla/5.0' -o ReShade_Setup.exe $url
+
+        # Extract just the 64-bit ReShade DLL from the installer.
+        7z e ReShade_Setup.exe ReShade64.dll -y
+        if (-not (Test-Path ReShade64.dll) -or ((Get-Item ReShade64.dll).Length -lt 100000)) {
+          Write-Error "ReShade64.dll was not extracted correctly (download may have failed)."
+          exit 1
+        }
+        Copy-Item ReShade64.dll dxgi.dll -Force   # FiveM loads ReShade as dxgi.dll

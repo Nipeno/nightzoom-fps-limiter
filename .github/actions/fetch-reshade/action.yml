@@ -12,7 +12,7 @@ inputs:
       opens a PR against this default when a newer version ships. Unrelated to the
       addon API pin in deps/reshade, which must stay at 6.1.0 (API 11).
     required: false
-    default: '6.8.0'
+    default: '9.9.9'
 
 outputs:
   version:

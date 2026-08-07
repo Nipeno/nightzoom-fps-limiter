@@ -93,3 +93,4 @@ Contributions welcome - start with **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 Free and open source under **GPLv3** - see [LICENSE](LICENSE). You can use, study, and modify it,
 but any shared version must stay open source too.
+

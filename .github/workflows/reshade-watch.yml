@@ -56,7 +56,16 @@ jobs:
             exit 1
           fi
 
-          current=$(grep -E "^    default: '" "$action" | head -1 | sed -E "s/^    default: '(.*)'$/\1/")
+          # Assert here, not just in the bump step below: that step only runs once we've
+          # decided something changed, so a second input default appearing above the pin
+          # would make this comparison read the wrong value, conclude "current", and never
+          # reach the stricter check - silently leaving the pin stale.
+          defaults=$(grep -cE "^    default: '" "$action")
+          if [ "$defaults" -ne 1 ]; then
+            echo "::error::Expected exactly one input default in $action, found $defaults. The pin is no longer unambiguous - update this workflow before it can bump anything."
+            exit 1
+          fi
+          current=$(grep -E "^    default: '" "$action" | sed -E "s/^    default: '(.*)'$/\1/")
           echo "pinned=$current  latest=$latest"
           echo "latest=$latest" >> "$GITHUB_OUTPUT"
           echo "current=$current" >> "$GITHUB_OUTPUT"
@@ -84,13 +93,8 @@ jobs:
           fi
 
           action='.github/actions/fetch-reshade/action.yml'
-          # The pin is the action's only input default. Bail rather than guess if that
-          # ever stops being true, so a second input can't get silently rewritten.
-          matches=$(grep -cE "^    default: '" "$action")
-          if [ "$matches" -ne 1 ]; then
-            echo "::error::Expected exactly one input default in $action, found $matches."
-            exit 1
-          fi
+          # Uniqueness was already asserted in the check step above, so this substitution
+          # cannot hit a second input's default. The diff guard below catches a no-op.
           sed -i -E "s/^    default: '.*'\$/    default: '$LATEST'/" "$action"
           if git diff --quiet -- "$action"; then
             echo "::error::sed changed nothing in $action - the pin's format moved, fix the pattern here."
